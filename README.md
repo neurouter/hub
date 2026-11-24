@@ -1,5 +1,7 @@
 # Neurouter
 
+[![Release](https://img.shields.io/github/v/release/neurouter/neurouter)](https://github.com/neurouter/neurouter/releases) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.neurouter%2Fgateway-0d9488)](https://registry.modelcontextprotocol.io/?q=com.neurouter) [![neurouter/neurouter MCP server](https://glama.ai/mcp/servers/neurouter/neurouter/badges/score.svg)](https://glama.ai/mcp/servers/neurouter/neurouter)
+
 Self-hosted **enterprise MCP gateway**. Agents connect to one `/mcp` endpoint and reach only the
 upstream MCP servers and tools they've been granted; every call is authenticated, authorized,
 rate-limited, audited and measured. The same server hosts the admin console and user portal.
