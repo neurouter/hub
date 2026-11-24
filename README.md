@@ -11,6 +11,10 @@ rate-limited, audited and measured. The same server hosts the admin console and 
 
 Website: [neurouter.com](https://neurouter.com) · Live demo (read-only, simulated data): [neurouter-demo.web.app](https://neurouter-demo.web.app) · Docs: [neurouter.com/docs](https://neurouter.com/docs)
 
+<a href="https://neurouter-demo.web.app"><img src="docs/images/demo.gif" alt="Neurouter console: tool calls held for approval and approved, the audit log filling live, a changed tool blocked until reviewed, grants and traffic metrics" width="800"></a>
+
+<sub>38 s walkthrough of the <a href="https://neurouter-demo.web.app">live demo</a> (simulated data): approvals, the live audit log, a blocked tool definition change, grants and metrics.</sub>
+
 > Phase 1 is in progress.
 
 ## Requirements
