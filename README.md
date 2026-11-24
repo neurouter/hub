@@ -92,7 +92,7 @@ cosign verify ghcr.io/neurouter/neurouter:0.1.1 \
 kubectl create secret generic neurouter-crypto \
   --from-literal=NEUROUTER_MASTER_KEYS='k1:…' --from-literal=NEUROUTER_ACTIVE_KEY_ID=k1 --from-literal=HASH_PEPPER='…'
 kubectl create secret generic neurouter-db --from-literal=DATABASE_URL='postgres://…'
-helm install neurouter oci://ghcr.io/neurouter/charts/neurouter --version 0.1.1 \
+helm install neurouter oci://ghcr.io/neurouter/charts/neurouter --version 0.1.2 \
   --set publicUrl=https://mcp.example.com \
   --set crypto.existingSecret=neurouter-crypto --set database.existingSecret=neurouter-db \
   --set oidc.issuer=https://idp.example.com --set oidc.clientId=neurouter --set oidc.existingSecret=neurouter-oidc \

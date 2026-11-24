@@ -2,7 +2,7 @@ apiVersion: v2
 name: neurouter
 description: Self-hosted, open-source MCP gateway with SSO, per-tool access control, human approvals and a tamper-evident audit log
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "0.1.1"
 license: Apache-2.0
 keywords: [mcp, mcp-gateway, model-context-protocol, ai-gateway, oauth, oidc, audit-log, access-control, ai-agents, security]
@@ -16,7 +16,7 @@ maintainers:
     url: https://github.com/neurouter
 annotations:
   artifacthub.io/category: security
-  artifacthub.io/alternativeName: mcp-gateway
+  artifacthub.io/alternativeName: neurouter-mcp-gateway
   artifacthub.io/license: Apache-2.0
   artifacthub.io/links: |
     - name: Documentation
@@ -27,7 +27,5 @@ annotations:
     - name: neurouter
       image: ghcr.io/neurouter/neurouter:0.1.1
   artifacthub.io/changes: |
-    - kind: changed
-      description: Default image is ghcr.io/neurouter/neurouter
-    - kind: security
-      description: Update transitive glob and minimatch (GHSA-g3hv-75wg-m249)
+    - kind: fixed
+      description: Artifact Hub metadata (alternative name)
