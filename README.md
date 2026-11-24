@@ -70,18 +70,31 @@ onnxruntime and sqlite-vec prebuilds target glibc), runs as the non-root `node` 
 embedding model in, so it needs no network egress for models (`EMBEDDINGS_ALLOW_REMOTE=false`).
 Multi-arch build: `docker buildx build --platform linux/amd64,linux/arm64 -t neurouter:<tag> .`
 
+Released images (linux/amd64 and linux/arm64) are published to GHCR, signed with cosign (keyless)
+and shipped with an SBOM and build provenance:
+
+```bash
+docker pull ghcr.io/neurouter/neurouter:0.1.0
+cosign verify ghcr.io/neurouter/neurouter:0.1.0 \
+  --certificate-identity-regexp '^https://github.com/neurouter/neurouter/\.github/workflows/release\.yml@' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
 ## Kubernetes (Helm)
 
 ```bash
 kubectl create secret generic neurouter-crypto \
   --from-literal=NEUROUTER_MASTER_KEYS='k1:…' --from-literal=NEUROUTER_ACTIVE_KEY_ID=k1 --from-literal=HASH_PEPPER='…'
 kubectl create secret generic neurouter-db --from-literal=DATABASE_URL='postgres://…'
-helm install neurouter deploy/helm/neurouter \
+helm install neurouter oci://ghcr.io/neurouter/charts/neurouter --version 0.1.0 \
   --set publicUrl=https://mcp.example.com \
   --set crypto.existingSecret=neurouter-crypto --set database.existingSecret=neurouter-db \
   --set oidc.issuer=https://idp.example.com --set oidc.clientId=neurouter --set oidc.existingSecret=neurouter-oidc \
   --set ingress.enabled=true --set ingress.host=mcp.example.com
 ```
+
+The chart is also in this repo at `deploy/helm/neurouter`; it defaults to the
+`ghcr.io/neurouter/neurouter` image at the chart's `appVersion`.
 
 - Postgres 16+ with the `vector` extension is required for more than one replica (SQLite is
   single-process). Replicas coordinate through Postgres (LISTEN/NOTIFY, advisory locks, leases), so
