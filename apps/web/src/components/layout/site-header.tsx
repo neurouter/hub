@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { CommandPalette, usePaletteShortcut } from '@/features/search/command-palette';
+import { DemoPill, IS_DEMO } from './demo-banner';
 import { UserMenu } from './user-menu';
 
 /** Top bar (approved prototype Topbar.dc.html): trigger · breadcrumbs · read-only · search · theme · user. */
@@ -34,7 +35,8 @@ export function SiteHeader({ me }: { me: Me }) {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
-      {readOnly ? (
+      <DemoPill />
+      {readOnly && !IS_DEMO ? (
         <span className="inline-flex h-[22px] items-center rounded-full border border-warning/40 bg-warning-muted px-2 text-xs font-medium text-warning">
           Read-only
         </span>

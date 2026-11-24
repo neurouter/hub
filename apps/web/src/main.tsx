@@ -8,8 +8,15 @@ import { toast } from '@/components/ui/toast';
 import { getDisplayPrefs } from '@/lib/display-prefs';
 import './styles/globals.css';
 
+const DEMO = import.meta.env.VITE_DEMO === 'true';
+
 async function enableMocks(): Promise<void> {
-  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW === 'true') {
+  if (DEMO) {
+    // the static demo site: read-only mocks plus simulated gateway traffic
+    const [{ startMockWorker }, { startDemoSimulator }, { liveTransport }] = await Promise.all([import('@/mocks/browser'), import('@/demo/simulator'), import('@/lib/live')]);
+    await startMockWorker({ readOnly: true });
+    startDemoSimulator(queryClient, liveTransport);
+  } else if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW === 'true') {
     const { startMockWorker } = await import('@/mocks/browser');
     await startMockWorker();
   }
@@ -22,7 +29,10 @@ const queryClient = createQueryClient({
     const returnTo = window.location.pathname + window.location.search;
     void router.navigate({ to: '/auth/login', search: { returnTo, error: 'session_expired' } });
   },
-  onMutationForbidden: (err) => toast.add({ title: "You don't have permission to do that", description: err.detail ?? err.title, type: 'error' }),
+  onMutationForbidden: (err) =>
+    err.code === 'demo_read_only'
+      ? toast.add({ title: 'Read-only demo', description: err.detail ?? err.title, type: 'info' })
+      : toast.add({ title: "You don't have permission to do that", description: err.detail ?? err.title, type: 'error' }),
 });
 const router = createAppRouter({ queryClient });
 

@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { ApprovalsLiveProvider } from '@/features/approvals/live';
 import { readStorage, writeStorage } from '@/lib/storage';
 import { AppSidebar } from './app-sidebar';
+import { DemoBanner } from './demo-banner';
 import { SiteHeader } from './site-header';
 
 export const SIDEBAR_STORAGE_KEY = 'neurouter-sidebar-open';
@@ -32,6 +33,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
       </a>
       <AppSidebar me={me} />
       <SidebarInset className="min-w-0">
+        <DemoBanner />
         <SiteHeader me={me} />
         <main id="main" className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-5 px-4 pt-6 pb-10 md:px-8">
           {children}
