@@ -5,6 +5,10 @@ updates:
     schedule: { interval: weekly }
     groups:
       minor-and-patch: { update-types: [minor, patch] }
+    ignore:
+      # engines: node >= 24, so types stay on the oldest supported major
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly }
