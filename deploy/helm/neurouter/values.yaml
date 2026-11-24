@@ -1,0 +1,128 @@
+# Neurouter Helm values (backend plan §16.3).
+
+image:
+  repository: neurouter
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 2
+
+# Public https origin of the gateway (no trailing slash). The MCP endpoint is <publicUrl>/mcp.
+publicUrl: https://mcp.example.com
+orgName: Neurouter
+logLevel: info
+
+database:
+  # Postgres URL (pgvector extension required). Use existingSecret in production.
+  url: ""
+  existingSecret: ""          # secret with key `DATABASE_URL`
+  # Optional separate audit/telemetry DB (AUDIT_DATABASE_URL); key `AUDIT_DATABASE_URL` in the same secret.
+  auditUrl: ""
+  poolMax: 20
+
+crypto:
+  # Secret with NEUROUTER_MASTER_KEYS, NEUROUTER_ACTIVE_KEY_ID and HASH_PEPPER (generate: npm run keys -- gen).
+  existingSecret: ""
+  masterKeys: ""
+  activeKeyId: ""
+  hashPepper: ""
+
+oidc:
+  issuer: ""
+  clientId: ""
+  clientSecret: ""            # or oidc.existingSecret with key OIDC_CLIENT_SECRET
+  existingSecret: ""
+  scopes: openid email profile groups
+  groupsClaim: groups
+  adminGroups: ""
+  auditorGroups: ""
+  allowedEmailDomains: ""
+  bootstrapAdminEmail: ""
+
+# onStart: every pod migrates under Kysely's DB lock. job: a pre-install/pre-upgrade Job migrates and pods skip it.
+migrations:
+  mode: job
+
+embeddings:
+  enabled: true
+  model: onnx-community/granite-embedding-small-english-r2-ONNX
+  dtype: q8
+
+approvals:
+  # must be >= approvalMaxTimeoutSec (settings) so held calls finish during rolling restarts
+  maxTimeoutSec: 900
+
+archive:
+  url: ""                     # AUDIT_ARCHIVE_URL (file:, s3://, gs://, azblob://); credentials via extraEnv / workload identity
+
+otel:
+  enabled: false
+  endpoint: http://otel-collector:4318
+
+metrics:
+  token: ""                   # optional bearer for /metrics
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}
+
+extraEnv: []                  # [{ name, value }] or valueFrom
+extraEnvFrom: []
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  className: ""
+  host: mcp.example.com
+  tls: []                     # [{ secretName, hosts: [...] }]
+  # SSE (approvals stream, held tool calls): no buffering, long timeouts (>= approvals.maxTimeoutSec + 60)
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "960"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "960"
+    nginx.ingress.kubernetes.io/proxy-body-size: "4m"
+
+resources:
+  requests: { cpu: 250m, memory: 512Mi }
+  limits: { memory: 1Gi }
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: false
+  # Egress CIDRs the gateway may reach (upstream MCP servers, IdP, object storage). Cloud metadata is always denied.
+  allowEgressCidrs: ["0.0.0.0/0"]
+  denyEgressCidrs: ["169.254.169.254/32"]
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}             # e.g. IRSA / GKE workload identity for the audit archive
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpread: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile: { type: RuntimeDefault }
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: ["ALL"] }

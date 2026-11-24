@@ -1,0 +1,9 @@
+Neurouter {{ .Chart.AppVersion }} is deployed as {{ include "neurouter.fullname" . }} ({{ .Values.replicaCount }} replicas).
+
+  Web app + API:  {{ .Values.publicUrl }}
+  MCP endpoint:   {{ .Values.publicUrl }}/mcp
+  Health:         /healthz (liveness), /readyz (readiness)
+
+Migrations run {{ if eq .Values.migrations.mode "job" }}in a pre-install/pre-upgrade Job{{ else }}on pod start (under a DB lock){{ end }}.
+Keep the crypto secret ({{ include "neurouter.cryptoSecret" . }}) backed up: without it stored credentials and
+upstream tokens cannot be decrypted and API keys stop working.

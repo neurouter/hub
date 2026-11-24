@@ -1,0 +1,82 @@
+# Prod-like local run (backend plan §16.2): Neurouter + Postgres (pgvector).
+#   cp .env.example .env && npm run keys -- gen   # paste NEUROUTER_MASTER_KEYS / NEUROUTER_ACTIVE_KEY_ID / HASH_PEPPER into .env
+#   docker compose up --build                     # http://localhost:3000
+# Optional profiles: `--profile oidc` (Dex IdP for real sign-in), `--profile otel` (OpenTelemetry collector).
+name: neurouter
+
+x-crypto: &crypto
+  NEUROUTER_MASTER_KEYS: ${NEUROUTER_MASTER_KEYS:?run `npm run keys -- gen` and set NEUROUTER_MASTER_KEYS in .env}
+  NEUROUTER_ACTIVE_KEY_ID: ${NEUROUTER_ACTIVE_KEY_ID:?set NEUROUTER_ACTIVE_KEY_ID in .env}
+  HASH_PEPPER: ${HASH_PEPPER:?set HASH_PEPPER in .env}
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: neurouter
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neurouter}
+      POSTGRES_DB: neurouter
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neurouter -d neurouter"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  neurouter:
+    build: .
+    image: neurouter:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${NEUROUTER_PORT:-3000}:3000"
+    environment:
+      <<: *crypto
+      # NODE_ENV=production requires an https PUBLIC_URL and OIDC; compose runs a production image in
+      # "local production" mode, so it uses development semantics for login and URLs (see README).
+      NODE_ENV: ${NEUROUTER_NODE_ENV:-development}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      DATABASE_URL: postgres://neurouter:${POSTGRES_PASSWORD:-neurouter}@postgres:5432/neurouter
+      SERVE_WEB: "true"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      AUTH_DEV_LOGIN: ${AUTH_DEV_LOGIN:-false}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid email profile groups}
+      OIDC_ADMIN_GROUPS: ${OIDC_ADMIN_GROUPS:-}
+      OUTBOUND_ALLOW_HTTP_LOOPBACK: ${OUTBOUND_ALLOW_HTTP_LOOPBACK:-false}
+      OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+      OTEL_SERVICE_NAME: neurouter
+    restart: unless-stopped
+
+  # --profile oidc: a local Dex IdP. Sign in as admin@example.com / password. Set in .env:
+  #   OIDC_ISSUER=http://localhost:5556/dex OIDC_CLIENT_ID=neurouter OIDC_CLIENT_SECRET=neurouter-dev-secret
+  # (the issuer must be reachable from both your browser and the container: add `127.0.0.1 dex` style
+  #  host mapping or use your host IP; see README "Trying real sign-in".)
+  dex:
+    profiles: ["oidc"]
+    image: ghcr.io/dexidp/dex:v2.44.0
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./deploy/compose/dex.yaml:/etc/dex/config.yaml:ro
+
+  # --profile otel: OTLP receiver that logs traces/logs (point OTEL_SDK_DISABLED=false at it)
+  otel-collector:
+    profiles: ["otel"]
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deploy/compose/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"
+
+volumes:
+  pgdata:

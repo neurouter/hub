@@ -1,0 +1,39 @@
+node_modules/
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.turbo/
+*.tgz
+*.log
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# local data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+data/
+models/
+
+# internal plans/reports/scripts: a separate private checkout of neurouter/internal
+.agent/
+
+# local scratch (legacy untracked files archived in tmp/legacy-untracked)
+tmp/
+
+.DS_Store
+.vscode/
+.idea/
+
+# build caches
+*.tsbuildinfo

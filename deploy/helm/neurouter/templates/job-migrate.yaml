@@ -1,0 +1,39 @@
+{{- if eq .Values.migrations.mode "job" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "neurouter.fullname" . }}-migrate-{{ .Release.Revision }}
+  labels: {{- include "neurouter.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: {{- include "neurouter.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "neurouter.serviceAccountName" . }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          image: {{ include "neurouter.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["node", "apps/server/dist/scripts/migrate.js", "up"]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PUBLIC_URL, value: {{ .Values.publicUrl | quote }} }
+            - { name: OIDC_ISSUER, value: {{ .Values.oidc.issuer | quote }} }
+            - { name: OIDC_CLIENT_ID, value: {{ .Values.oidc.clientId | quote }} }
+            {{- include "neurouter.env" . | nindent 12 }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

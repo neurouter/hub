@@ -1,0 +1,123 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`client config templates > Claude Code × api_key 1`] = `
+{
+  "code": "claude mcp add --transport http neurouter https://mcp.acme.example/mcp \\
+  --header "Authorization: Bearer \${NEUROUTER_API_KEY}"",
+  "hint": "The key is never inserted unless you paste it or just created it. Set NEUROUTER_API_KEY in your environment instead of committing the key.",
+  "target": "shell",
+  "targetLabel": "Run in your terminal",
+}
+`;
+
+exports[`client config templates > Claude Code × oauth 1`] = `
+{
+  "code": "claude mcp add --transport http neurouter https://mcp.acme.example/mcp
+
+# Then run /mcp in Claude Code and choose “Authenticate”.",
+  "hint": "Your client will open a browser to approve access. You can revoke it later from the agent’s Authorized apps tab.",
+  "target": "shell",
+  "targetLabel": "Run in your terminal",
+}
+`;
+
+exports[`client config templates > Cursor × api_key 1`] = `
+{
+  "code": "{
+  "mcpServers": {
+    "neurouter": {
+      "url": "https://mcp.acme.example/mcp",
+      "headers": {
+        "Authorization": "Bearer \${env:NEUROUTER_API_KEY}"
+      }
+    }
+  }
+}",
+  "hint": "The key is never inserted unless you paste it or just created it. Set NEUROUTER_API_KEY in your environment instead of committing the key.",
+  "target": "~/.cursor/mcp.json",
+  "targetLabel": "Add to",
+}
+`;
+
+exports[`client config templates > Cursor × oauth 1`] = `
+{
+  "code": "{
+  "mcpServers": {
+    "neurouter": {
+      "url": "https://mcp.acme.example/mcp"
+    }
+  }
+}",
+  "hint": "Your client will open a browser to approve access. You can revoke it later from the agent’s Authorized apps tab.",
+  "target": "~/.cursor/mcp.json",
+  "targetLabel": "Add to",
+}
+`;
+
+exports[`client config templates > Generic × api_key 1`] = `
+{
+  "code": "URL:        https://mcp.acme.example/mcp
+Transport:  Streamable HTTP (POST)
+Protocol:   MCP-Protocol-Version: 2026-07-28 | 2025-11-25
+Auth:       Authorization: Bearer <YOUR_API_KEY>",
+  "hint": "The key is never inserted unless you paste it or just created it. Set NEUROUTER_API_KEY in your environment instead of committing the key.",
+  "target": "Streamable HTTP",
+  "targetLabel": "Any MCP client",
+}
+`;
+
+exports[`client config templates > Generic × oauth 1`] = `
+{
+  "code": "URL:        https://mcp.acme.example/mcp
+Transport:  Streamable HTTP (POST)
+Protocol:   MCP-Protocol-Version: 2026-07-28 | 2025-11-25
+Auth:       OAuth 2.1 (discover via 401 WWW-Authenticate →
+            /.well-known/oauth-protected-resource)",
+  "hint": "Your client will open a browser to approve access. You can revoke it later from the agent’s Authorized apps tab.",
+  "target": "Streamable HTTP",
+  "targetLabel": "Any MCP client",
+}
+`;
+
+exports[`client config templates > VS Code × api_key 1`] = `
+{
+  "code": "{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "neurouter-key",
+      "description": "Neurouter API key",
+      "password": true
+    }
+  ],
+  "servers": {
+    "neurouter": {
+      "type": "http",
+      "url": "https://mcp.acme.example/mcp",
+      "headers": {
+        "Authorization": "Bearer \${input:neurouter-key}"
+      }
+    }
+  }
+}",
+  "hint": "The key is never inserted unless you paste it or just created it. Set NEUROUTER_API_KEY in your environment instead of committing the key.",
+  "target": ".vscode/mcp.json",
+  "targetLabel": "Add to",
+}
+`;
+
+exports[`client config templates > VS Code × oauth 1`] = `
+{
+  "code": "{
+  "servers": {
+    "neurouter": {
+      "type": "http",
+      "url": "https://mcp.acme.example/mcp"
+    }
+  }
+}",
+  "hint": "Your client will open a browser to approve access. You can revoke it later from the agent’s Authorized apps tab.",
+  "target": ".vscode/mcp.json",
+  "targetLabel": "Add to",
+}
+`;

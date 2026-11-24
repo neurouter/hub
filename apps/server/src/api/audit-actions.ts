@@ -1,0 +1,68 @@
+/**
+ * Audit coverage of the mutating REST routes (backend §9.6: "every non-GET route declares an
+ * auditAction"). Each non-GET contract endpoint maps to the audit action(s) its handler records,
+ * or to `{ exempt }` with the reason it changes nothing security-relevant. `audit-actions.test.ts`
+ * fails when a mutating endpoint is added without an entry, or an action here is never recorded.
+ */
+export type RouteAudit = { actions: readonly string[] } | { exempt: string };
+
+const a = (...actions: string[]): RouteAudit => ({ actions });
+const exempt = (reason: string): RouteAudit => ({ exempt: reason });
+
+export const ROUTE_AUDIT: Record<string, RouteAudit> = {
+  'auth.devLogin': a('auth.login'),
+  'auth.logout': a('auth.logout'),
+  'me.updatePreferences': exempt('per-user UI preferences (theme, time display, density)'),
+  'system.rotateKeys': a('keys.rotate'),
+  'system.reindex': a('search.reindex'),
+  'oauth.decideConsent': a('oauth.consent.approve', 'oauth.consent.deny'),
+  'oauth.revokeMyGrant': a('oauth_grant.revoke'),
+  'oauth.updateClient': a('oauth_client.block', 'oauth_client.unblock'),
+  'accessRequests.create': a('access_request.create'),
+  'accessRequests.cancelMine': a('access_request.cancel'),
+  'accessRequests.approve': a('access_request.approve'),
+  'accessRequests.deny': a('access_request.deny'),
+  'connections.disconnect': a('connection.disconnect'),
+  'agents.create': a('agent.create'),
+  'agents.update': a('agent.update'),
+  'agents.delete': a('agent.delete'),
+  'agents.createKey': a('api_key.create'),
+  'agents.revokeKey': a('api_key.revoke'),
+  'agents.revokeAllKeys': a('api_key.revoke_all'),
+  'agents.setScope': a('agent.scope.update'),
+  'users.create': a('user.create'),
+  'users.update': a('user.update'),
+  'groups.create': a('group.create'),
+  'groups.update': a('group.update'),
+  'groups.delete': a('group.delete'),
+  'groups.addMembers': a('group.members.add'),
+  'groups.removeMember': a('group.members.remove'),
+  'groups.createClaimMapping': a('group.mapping.create'),
+  'groups.deleteClaimMapping': a('group.mapping.delete'),
+  'servers.testConnection': exempt('dry-run probe of a URL; nothing is stored'),
+  'servers.create': a('server.create'),
+  'servers.update': a('server.update'),
+  'servers.delete': a('server.delete'),
+  'servers.putCredentials': a('server.credentials.update'),
+  'servers.refreshIcon': exempt('re-fetches the cached icon (derived data)'),
+  'servers.sync': a('server.sync'),
+  'servers.healthCheck': exempt('runs a health probe; only the derived health status changes'),
+  'tools.update': a('tool.update'),
+  'tools.bulk': a('tool.bulk_update'),
+  'tools.approveDefinition': a('tool.definition.approve'),
+  'tools.rejectDefinition': a('tool.definition.reject'),
+  'grants.create': a('grant.create'),
+  'grants.delete': a('grant.delete'),
+  'grants.batch': a('grant.batch'),
+  'approvals.approve': a('approval.approve'),
+  'approvals.deny': a('approval.deny'),
+  'audit.verify': a('audit.verify'),
+  'settings.update': a('settings.update'),
+  'settings.updateOidc': a('settings.oidc.update'),
+  'settings.testOidc': exempt('dry-run discovery against an issuer; nothing is stored'),
+  'settings.testExport': a('settings.export.test'),
+  'redaction.create': a('redaction_rule.create'),
+  'redaction.update': a('redaction_rule.update'),
+  'redaction.delete': a('redaction_rule.delete'),
+  'redaction.test': exempt('previews redaction of a sample payload; nothing is stored'),
+};

@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "neurouter.fullname" . }}
+  labels: {{- include "neurouter.labels" . | nindent 4 }}
+data:
+  NODE_ENV: production
+  PORT: {{ .Values.service.port | quote }}
+  PUBLIC_URL: {{ .Values.publicUrl | quote }}
+  ORG_NAME: {{ .Values.orgName | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  TRUST_PROXY: "true"
+  SERVE_WEB: "true"
+  DB_POOL_MAX: {{ .Values.database.poolMax | quote }}
+  MIGRATE_ON_START: {{ eq .Values.migrations.mode "onStart" | quote }}
+  COORDINATION_BACKEND: postgres
+  EMBEDDINGS_ENABLED: {{ .Values.embeddings.enabled | quote }}
+  EMBEDDINGS_MODEL: {{ .Values.embeddings.model | quote }}
+  EMBEDDINGS_DTYPE: {{ .Values.embeddings.dtype | quote }}
+  EMBEDDINGS_ALLOW_REMOTE: "false"
+  OIDC_ISSUER: {{ .Values.oidc.issuer | quote }}
+  OIDC_CLIENT_ID: {{ .Values.oidc.clientId | quote }}
+  OIDC_SCOPES: {{ .Values.oidc.scopes | quote }}
+  OIDC_GROUPS_CLAIM: {{ .Values.oidc.groupsClaim | quote }}
+  OIDC_ADMIN_GROUPS: {{ .Values.oidc.adminGroups | quote }}
+  OIDC_AUDITOR_GROUPS: {{ .Values.oidc.auditorGroups | quote }}
+  OIDC_ALLOWED_EMAIL_DOMAINS: {{ .Values.oidc.allowedEmailDomains | quote }}
+  {{- with .Values.oidc.bootstrapAdminEmail }}
+  BOOTSTRAP_ADMIN_EMAIL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.archive.url }}
+  AUDIT_ARCHIVE_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.metrics.token }}
+  METRICS_TOKEN: {{ . | quote }}
+  {{- end }}
+  OTEL_SDK_DISABLED: {{ not .Values.otel.enabled | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.otel.endpoint | quote }}
+  OTEL_SERVICE_NAME: neurouter

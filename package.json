@@ -1,0 +1,41 @@
+{
+  "name": "neurouter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neurouter: self-hosted enterprise MCP gateway",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/shared",
+    "apps/server",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:server": "npm run dev -w @neurouter/server",
+    "dev:web": "npm run dev -w @neurouter/web",
+    "build": "npm run build -w @neurouter/shared && npm run build -w @neurouter/web && npm run build -w @neurouter/server",
+    "start": "npm run start -w @neurouter/server",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build && npm run test:e2e -w @neurouter/web --",
+    "coverage": "vitest run --coverage",
+    "typecheck": "npm run typecheck -w @neurouter/shared && npm run typecheck -w @neurouter/server && npm run typecheck -w @neurouter/web",
+    "lint": "eslint .",
+    "db:migrate": "npm run db:migrate -w @neurouter/server --",
+    "keys": "npm run keys -w @neurouter/server --"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.1.1",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0",
+    "vitest": "5.1.1"
+  }
+}

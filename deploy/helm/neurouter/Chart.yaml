@@ -1,0 +1,8 @@
+apiVersion: v2
+name: neurouter
+description: Neurouter, a self-hosted enterprise MCP gateway
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+license: Apache-2.0
+keywords: [mcp, gateway, oauth, audit]

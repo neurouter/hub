@@ -1,0 +1,19 @@
+# Cloud Build upload context (gcloud builds submit); mirrors .dockerignore
+.gcloudignore
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/coverage
+apps/server/models
+models
+**/data
+**/*.db
+**/*.db-*
+.env
+.env.*
+.git
+.agent
+tmp
+deploy
+*.log
+.DS_Store
