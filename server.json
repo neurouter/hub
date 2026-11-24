@@ -5,7 +5,7 @@
   "description": "Self-hosted enterprise MCP gateway: SSO, per-tool ACL, human approvals, verifiable audit log.",
   "version": "0.1.0",
   "websiteUrl": "https://neurouter.com",
-  "repository": { "url": "https://github.com/neurouter/neurouter", "source": "github" },
+  "repository": { "url": "https://github.com/neurouter/neurouter", "source": "github", "id": "1144767393" },
   "icons": [{ "src": "https://neurouter.com/favicon.svg", "mimeType": "image/svg+xml", "sizes": ["any"] }],
   "packages": [
     {
