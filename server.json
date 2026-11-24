@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.neurouter/gateway",
+  "title": "Neurouter MCP Gateway",
+  "description": "Self-hosted enterprise MCP gateway: SSO, per-tool ACL, human approvals, verifiable audit log.",
+  "version": "0.1.0",
+  "websiteUrl": "https://neurouter.com",
+  "repository": { "url": "https://github.com/neurouter/neurouter", "source": "github" },
+  "icons": [{ "src": "https://neurouter.com/favicon.svg", "mimeType": "image/svg+xml", "sizes": ["any"] }],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/neurouter/neurouter:0.1.0",
+      "transport": { "type": "streamable-http", "url": "http://localhost:{PORT}/mcp" },
+      "environmentVariables": [
+        { "name": "PUBLIC_URL", "description": "External https base URL (OAuth metadata, origin checks)", "isRequired": true },
+        { "name": "DATABASE_URL", "description": "postgres:// URL in production, sqlite: for evaluation", "isRequired": true, "isSecret": true },
+        { "name": "NEUROUTER_MASTER_KEYS", "description": "Key-encryption keys (id:base64)", "isRequired": true, "isSecret": true },
+        { "name": "NEUROUTER_ACTIVE_KEY_ID", "description": "Active key id", "isRequired": true },
+        { "name": "HASH_PEPPER", "description": "HMAC pepper for API keys and tokens", "isRequired": true, "isSecret": true },
+        { "name": "PORT", "description": "HTTP port", "default": "3000" }
+      ]
+    }
+  ]
+}

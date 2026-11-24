@@ -206,10 +206,17 @@ describe('/admin/approvals (W9 acceptance)', () => {
   });
 
   it('approve removes the card optimistically and toasts', async () => {
-    const approve = vi.fn(() => ({ ...APPROVALS[2]!, status: 'approved', actions: [] }));
+    // hold the server response so the removal is provably optimistic (before the server answers)
+    let respond!: () => void;
+    const answered = new Promise<void>((resolve) => (respond = resolve));
+    const approve = vi.fn(async () => {
+      await answered;
+      return { ...APPROVALS[2]!, status: 'approved', actions: [] };
+    });
     const { user } = await renderRoute('/admin/approvals', { fixtures: { 'approvals.list': page([APPROVALS[2]!]), 'approvals.approve': approve } });
     await user.click(await screen.findByRole('button', { name: 'Approve slack__post_message' }));
-    expect(screen.queryByRole('heading', { name: 'slack__post_message' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'slack__post_message' })).not.toBeInTheDocument());
+    respond();
     expect(await screen.findByText('Approved slack__post_message')).toBeInTheDocument();
     expect(approve).toHaveBeenCalledTimes(1);
   });

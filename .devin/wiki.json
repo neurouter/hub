@@ -1,0 +1,14 @@
+{
+  "repo_notes": [
+    {
+      "content": "Neurouter is a self-hosted enterprise MCP gateway. apps/server = Fastify API + /mcp gateway; apps/web = React admin console and user portal; packages/shared = zod API contract. Key concepts: agents (identities owned by users), grants (deny wins), tool pinning, approvals (held calls), hash-chained audit log with signed checkpoints, OAuth 2.1 authorization server, hybrid tool search with a local embedding model. Supports MCP 2026-07-28 and 2025-11-25. SQLite for local dev, Postgres + pgvector in production."
+    }
+  ],
+  "pages": [
+    { "title": "Overview and architecture", "purpose": "What Neurouter is and how a tool call flows through authn, ACL, rate limit, approval, upstream, audit" },
+    { "title": "Security model", "purpose": "OIDC, API keys, OAuth AS, no token passthrough, envelope encryption, SSRF guards" },
+    { "title": "Audit log", "purpose": "Hash chain, checkpoints, verification, retention, export, threat model" },
+    { "title": "Deployment", "purpose": "Docker Compose, Helm, Postgres requirements, key rotation, backups" },
+    { "title": "Development", "purpose": "Monorepo layout, scripts, tests, contributing" }
+  ]
+}

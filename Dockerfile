@@ -67,9 +67,18 @@ RUN mkdir -p /data && chown node:node /data
 USER node
 EXPOSE 3000
 VOLUME ["/data"]
-LABEL org.opencontainers.image.title="neurouter" \
-      org.opencontainers.image.description="Self-hosted enterprise MCP gateway" \
-      org.opencontainers.image.licenses="Apache-2.0"
+ARG VERSION=dev
+ARG REVISION=unknown
+LABEL org.opencontainers.image.title="Neurouter" \
+      org.opencontainers.image.description="Self-hosted, open-source MCP gateway: SSO, OAuth 2.1, per-tool access control, human approvals, tamper-evident audit log." \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.source="https://github.com/neurouter/neurouter" \
+      org.opencontainers.image.url="https://neurouter.com" \
+      org.opencontainers.image.documentation="https://neurouter.com/docs" \
+      org.opencontainers.image.vendor="Perspektives Digital Oy" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${REVISION}" \
+      io.modelcontextprotocol.server.name="com.neurouter/gateway"
 HEALTHCHECK --interval=15s --timeout=3s --start-period=30s CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 # a 16 MB young generation keeps RSS flat on long streams (100k-row audit export: ~190 MB peak instead of ~300 MB)
 CMD ["node", "--max-semi-space-size=16", "--import", "./apps/server/dist/instrumentation.js", "apps/server/dist/main.js"]
