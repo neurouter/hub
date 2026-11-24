@@ -18,7 +18,11 @@ test('a changed definition shows a diff and can be re-approved', async ({ page, 
 
   await page.getByRole('tab', { name: 'Tools' }).click();
   await expect(page.getByRole('row').filter({ hasText: echo.qualifiedName })).toContainText('Pending review');
+  await expect(page.getByRole('row').filter({ hasText: echo.qualifiedName })).toContainText('Blocked until reviewed');
   await page.getByRole('link', { name: echo.qualifiedName }).click();
+  // the switch is still on, but the gateway refuses calls until the definition is approved
+  await expect(page.getByText('Blocked until reviewed')).toBeVisible();
+  await expect(page.getByText('Enabled', { exact: true })).toHaveCount(0);
 
   const changes = page.getByLabel('What changed');
   await expect(changes).toContainText('Description changed');
@@ -35,6 +39,8 @@ test('a changed definition shows a diff and can be re-approved', async ({ page, 
   await confirm.getByRole('button', { name: 'Approve definition' }).click();
   await expect(confirm).toBeHidden();
   await expect(page.getByText('Approved', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Blocked until reviewed')).toHaveCount(0);
+  await expect(page.getByText('Enabled', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Definition' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('tabpanel', { name: 'Definition' })).toContainText('Echo text and ALSO delete files');
 

@@ -11,6 +11,7 @@ import { Page } from '@/components/layout/section';
 import { Pill, ReviewStateBadge } from '@/components/status/status';
 import { settingsQuery } from '@/features/settings/queries';
 import { DefinitionPanel } from '@/features/tools/definition-panel';
+import { EffectiveStatePill } from '@/features/tools/effective-state-pill';
 import { PolicyPanel } from '@/features/tools/policy-panel';
 import { definitionDiffQuery, toolQuery } from '@/features/tools/queries';
 import { ReviewPanel } from '@/features/tools/review-panel';
@@ -65,7 +66,7 @@ function ToolDetailPage() {
       />
       <div className="-mt-3 flex flex-wrap gap-2">
         <ReviewStateBadge state={t.reviewState} />
-        {!t.enabled ? <Pill tone="muted">{pending ? 'Disabled until reviewed' : 'Disabled'}</Pill> : <Pill tone="ok">Enabled</Pill>}
+        <EffectiveStatePill tool={t} />
         {t.requiresApproval ? <Pill tone="warn">Requires approval</Pill> : null}
       </div>
       <Tabs value={active} onValueChange={(v) => void navigate({ search: { tab: v as Tab }, replace: true })}>

@@ -47,7 +47,11 @@ export function PolicyPanel({ tool, defaults }: { tool: ToolDetail; defaults?: {
             <Switch className="mt-0.5" checked={tool.enabled} disabled={!canWrite || tool.reviewState !== 'approved'} onCheckedChange={(v) => update.mutate({ enabled: v })} />
             <span className="flex flex-col">
               <span className="font-medium">Enabled</span>
-              <span className="text-[13px] text-muted-foreground">{tool.reviewState !== 'approved' ? 'Approve the pending definition before enabling.' : 'Disabled tools are hidden from search and calls are blocked.'}</span>
+              <span className="text-[13px] text-muted-foreground">{tool.reviewState !== 'approved'
+                  ? tool.enabled
+                    ? 'Switched on, but calls are blocked until the pending definition is approved.'
+                    : 'Approve the pending definition before enabling.'
+                  : 'Disabled tools are hidden from search and calls are blocked.'}</span>
             </span>
           </label>
           <label className="flex items-start gap-3">

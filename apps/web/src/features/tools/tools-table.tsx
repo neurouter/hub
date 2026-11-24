@@ -16,6 +16,8 @@ import { useMe } from '@/hooks/use-me';
 import { apiFetch } from '@/lib/api-client';
 import { formatNumber, formatRelative, plural } from '@/lib/format';
 import { notifyError, notifySuccess } from '@/lib/notify';
+import { EffectiveStatePill } from './effective-state-pill';
+import { effectiveToolState } from './effective-state';
 import { toolKeys, toolsListQuery } from './queries';
 
 type Patch = Pick<UpdateToolBody, 'enabled' | 'requiresApproval'>;
@@ -78,12 +80,15 @@ export function ToolsTable({ filter, hideServer, empty }: { filter: Omit<ListToo
       header: 'Enabled',
       priority: 2,
       cell: (t) => (
-        <Switch
-          aria-label={`Enabled: ${t.qualifiedName}`}
-          checked={t.enabled}
-          disabled={!canWrite(t) || (t.reviewState !== 'approved' && !t.enabled)}
-          onCheckedChange={(v) => patch.mutate({ tool: t, body: { enabled: v } })}
-        />
+        <span className="inline-flex items-center gap-2">
+          <Switch
+            aria-label={`Enabled: ${t.qualifiedName}`}
+            checked={t.enabled}
+            disabled={!canWrite(t) || (t.reviewState !== 'approved' && !t.enabled)}
+            onCheckedChange={(v) => patch.mutate({ tool: t, body: { enabled: v } })}
+          />
+          {t.enabled && effectiveToolState(t) !== 'enabled' ? <EffectiveStatePill tool={t} /> : null}
+        </span>
       ),
     },
     {
