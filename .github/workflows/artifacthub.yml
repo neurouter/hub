@@ -1,0 +1,31 @@
+name: Artifact Hub metadata
+
+# Pushes deploy/helm/artifacthub-repo.yml as the special `artifacthub.io` tag of the chart
+# repository, which Artifact Hub reads to mark the publisher as verified.
+on:
+  push:
+    branches: [master]
+    paths: ['deploy/helm/artifacthub-repo.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oras-project/setup-oras@v2
+      - name: Push repository metadata
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_TOKEN" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+          cd deploy/helm
+          oras push ghcr.io/neurouter/charts/neurouter:artifacthub.io \
+            --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
+            artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
