@@ -13,17 +13,14 @@ export default defineConfig(({ command, mode }) => {
   // .env lives at the repo root (shared with the server); env files are not in process.env here.
   const env = { ...loadEnv(mode, repoRoot, ''), ...process.env };
   const serve = command === 'serve' && mode !== 'test';
-  // `npm run build:demo`: the console against MSW fixtures as a static, read-only demo site
-  const demo = env.VITE_DEMO === 'true';
   return {
     plugins: [
       // must come before react() (TanStack Router docs)
       tanstackRouter({ target: 'react', autoCodeSplitting: true, routesDirectory: './src/routes', generatedRouteTree: './src/routeTree.gen.ts' }),
       react(),
       tailwindcss(),
-      // serves the MSW worker in dev (VITE_ENABLE_MSW=true) and emits it into the demo build only;
-      // never part of the production build the gateway serves
-      ...((serve && env.VITE_ENABLE_MSW === 'true') || demo ? [msw({ mode: 'worker-only' })] : []),
+      // serves the MSW worker in dev only (VITE_ENABLE_MSW=true); never part of the production build
+      ...(serve && env.VITE_ENABLE_MSW === 'true' ? [msw({ mode: 'worker-only' })] : []),
     ],
     envDir: repoRoot,
     resolve: {
@@ -38,6 +35,6 @@ export default defineConfig(({ command, mode }) => {
           proxy: buildDevProxy(env.NEUROUTER_DEV_API_URL),
         }
       : {},
-    build: { outDir: demo ? 'dist-demo' : 'dist', emptyOutDir: true, sourcemap: !demo },
+    build: { outDir: 'dist', emptyOutDir: true, sourcemap: true },
   };
 });

@@ -11,8 +11,7 @@ import type {
  * validated again by the contract handlers at response time.
  */
 
-/** Fixed for tests; the demo site (VITE_DEMO) anchors the dataset to the visitor's clock. */
-export const NOW = import.meta.env.VITE_DEMO === 'true' ? Date.now() : Date.parse('2026-11-24T10:00:00.000Z');
+export const NOW = Date.parse('2026-11-24T10:00:00.000Z');
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -613,15 +612,12 @@ export function auditEventFull(id: string): AuditEventFull | undefined {
 
 /* ------------------------------------------------------------------ metrics */
 
-/** Calls added by the demo simulator (src/demo/simulator.ts) since the page loaded. */
-export const LIVE = { calls: 0, blocked: 0 };
-
 export function metricsSummary(): MetricsSummary {
   return {
-    calls: 184_302 + LIVE.calls,
+    calls: 184_302,
     successRate: 0.9871,
     errorRate: 0.0129,
-    blocked: 1942 + LIVE.blocked,
+    blocked: 1942,
     latency: { p50: 212, p95: 1380, p99: 3900 },
     previous: { calls: 163_970, successRate: 0.9841, errorRate: 0.0159, blocked: 1605, latency: { p50: 218, p95: 1278, p99: 3861 } },
   };

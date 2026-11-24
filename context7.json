@@ -1,18 +1,9 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
-  "url": "https://context7.com/neurouter/neurouter",
-  "public_key": "pk_NAzW88ZeCIHF2L9RZQa0s",
   "projectTitle": "Neurouter",
   "description": "Self-hosted, open-source enterprise MCP gateway: SSO, OAuth 2.1, per-tool access control, human approvals and a tamper-evident audit log.",
   "folders": [],
-  "excludeFolders": [
-    "node_modules",
-    "dist",
-    "apps/web/e2e",
-    "apps/web/src/mocks",
-    "**/*.test.ts",
-    "**/*.test.tsx"
-  ],
+  "excludeFolders": ["node_modules", "dist", "apps/web/e2e", "apps/web/src/mocks", "**/*.test.ts", "**/*.test.tsx"],
   "rules": [
     "Agents connect to one /mcp endpoint; upstream tools are exposed as <server-slug>__<tool>.",
     "Configuration is environment variables only; see .env.example and apps/server/src/config/env.ts.",
