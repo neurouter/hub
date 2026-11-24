@@ -94,3 +94,26 @@ jobs:
           helm package deploy/helm/neurouter --destination dist-chart
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
           helm push dist-chart/*.tgz oci://ghcr.io/neurouter/charts
+
+  mcp-registry:
+    # Publishes server.json as com.neurouter/gateway (DNS auth on neurouter.com).
+    # Skipped until the MCP_REGISTRY_PRIVATE_KEY secret (hex Ed25519 seed) exists.
+    runs-on: ubuntu-latest
+    needs: image
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: read
+    env:
+      MCP_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+      PUBLISHER_VERSION: v1.8.16
+    steps:
+      - uses: actions/checkout@v7
+      - name: Publish to the MCP Registry
+        if: env.MCP_PRIVATE_KEY != ''
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          jq --arg v "$version" '.version = $v | .packages[0].identifier = "ghcr.io/neurouter/neurouter:\($v)"' server.json > server.json.tmp
+          mv server.json.tmp server.json
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/download/${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login dns --domain neurouter.com
+          ./mcp-publisher publish
