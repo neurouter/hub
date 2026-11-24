@@ -591,8 +591,9 @@ export function auditEventFull(id: string): AuditEventFull | undefined {
             headers: { 'x-api-key': { $redacted: 'token-keys' } },
           }
         : { query: 'payments retry', repo: 'acme-corp/payments-api' },
-    outputSize: isAdmin ? null : 18_841,
-    outputHash: isAdmin ? null : 'sha256:9c1e04b2f7aa61c8e3d4f50a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6ea07d4f2b',
+    // blocked calls (denied, held, timed out) never reached the upstream: no output
+    outputSize: isAdmin || e.status === 'blocked' ? null : 18_841,
+    outputHash: isAdmin || e.status === 'blocked' ? null : 'sha256:9c1e04b2f7aa61c8e3d4f50a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6ea07d4f2b',
     output: null,
     error: e.errorMessage ? { code: e.status, message: e.errorMessage, detail: null } : null,
     hash: 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',

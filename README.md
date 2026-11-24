@@ -165,7 +165,7 @@ Every audit row is hash-chained (`sha256(prev_hash ‖ JCS(row))`), and a checkp
 HMAC key derived from the KEKs is written every 10,000 rows or 5 minutes, on key rotation and before
 every retention cut.
 
-- UI: Audit log → **Verify**. API: `POST /api/audit/verify {"fromSeq"?, "toSeq"?}` (auditor or
+- UI: Audit log → **Verify**. API: `POST /api/audit/verify {"from"?, "to"?}` (ISO timestamps; omit both to verify the whole retained log) (auditor or
   admin) returns `202 {jobId}`; poll `GET /api/jobs/:id`. The result is
   `{ ok, checked, firstSeq, lastSeq, checkpointsVerified, brokenAt }`; `brokenAt` names the first
   row whose hash, link or checkpoint doesn't match. The run itself is audited.
