@@ -9,7 +9,7 @@ rate-limited, audited and measured. The same server hosts the admin console and 
   <img alt="AI clients (Claude Code, Cursor, VS Code, ChatGPT, CI) connect to Neurouter's /mcp endpoint; every call passes auth, ACL, rate limit, approval, audit and metrics before reaching MCP servers. An unregistered client is rejected with 401." src="docs/images/gateway-light.png">
 </picture>
 
-Website: [neurouter.com](https://neurouter.com)
+Website: [neurouter.com](https://neurouter.com) · Live demo (read-only, simulated data): [neurouter-demo.web.app](https://neurouter-demo.web.app) · Docs: [neurouter.com/docs](https://neurouter.com/docs)
 
 > Phase 1 is in progress.
 
