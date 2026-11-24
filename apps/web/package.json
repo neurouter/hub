@@ -11,7 +11,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "size": "node bundle-budget.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:demo": "tsc -b && VITE_DEMO=true vite build"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

@@ -23,9 +23,15 @@ function problem(status: number, code: string, title: string, detail: string): R
  * Fixtures are validated against the endpoint's response schema (so mocks can't drift);
  * endpoints without a fixture answer 501 problem+json.
  */
-export function createContractHandlers(fixtures: ContractFixtures = {}): HttpHandler[] {
+/** Non-GET endpoints that only read or simulate, so the read-only demo still answers them. */
+export const DEMO_READ_ONLY_ALLOW = new Set(['audit.verify', 'redaction.test', 'servers.testConnection', 'servers.healthCheck']);
+
+export function createContractHandlers(fixtures: ContractFixtures = {}, opts: { readOnly?: boolean } = {}): HttpHandler[] {
   return ALL_ENDPOINTS.map(({ key, def }: { key: string; def: EndpointDef }) =>
     METHOD[def.method](def.path, async ({ request, params }) => {
+      if (opts.readOnly && def.method !== 'GET' && !DEMO_READ_ONLY_ALLOW.has(key)) {
+        return problem(403, 'demo_read_only', 'Read-only demo', "This is a read-only demo, so changes aren't saved. Run Neurouter yourself to try it.");
+      }
       if (!(key in fixtures)) return problem(501, 'not_implemented', 'Not mocked', `No MSW fixture for ${key} (${def.method} ${def.path})`);
       const f = fixtures[key];
       const value = typeof f === 'function' ? await (f as Resolver)({ request, params }) : f;
@@ -53,3 +59,6 @@ export function defaultFixtures(): ContractFixtures {
 }
 
 export const handlers = createContractHandlers(defaultFixtures());
+
+/** The public demo site: same fixtures, every write refused with `demo_read_only`. */
+export const demoHandlers = (): HttpHandler[] => createContractHandlers(defaultFixtures(), { readOnly: true });
