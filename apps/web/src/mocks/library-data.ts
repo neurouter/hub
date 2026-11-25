@@ -1,6 +1,7 @@
 import {
   computeGrade,
   lintDefinitions,
+  summarizeParams,
   type ConnectionFacts,
   type GithubFacts,
   type LibraryCheck,
@@ -235,7 +236,10 @@ function detail(s: Seed): LibraryEntryDetail {
     ? {
         checkedAt,
         connection: s.connection ? { ...s.connection, paymentRequired: s.connection.paymentRequired ?? false, serverInfo: s.connection.serverInfo ?? null } : null,
-        tools: lint?.tools ?? [],
+        tools: (lint?.tools ?? []).map((l, i) => {
+          const t = s.tools![i]!;
+          return { ...l, title: t.title ?? null, description: t.description ?? '', params: summarizeParams(t.inputSchema), annotations: (t.annotations ?? {}) as Record<string, boolean> };
+        }),
         github: s.github ? { repo: s.github.repo, found: s.github.found, archived: s.github.archived, stars: s.github.stars, pushedAt: s.github.pushedAt ? iso(s.github.pushedAt) : null, license: s.github.license, ownerType: s.github.ownerType, error: null } : null,
       }
     : null;
@@ -263,6 +267,7 @@ function detail(s: Seed): LibraryEntryDetail {
     inGateway: null,
     checkedAt,
     updatedAt: iso(NOW - Math.min(s.publishedDaysAgo, 30) * DAY),
+    iconUrl: `/api/library/${id(s.n)}/icon`,
     remotes,
     packages: s.packages ?? [],
     publishedAt: iso(NOW - s.publishedDaysAgo * DAY),
@@ -351,4 +356,16 @@ export function demoServerQuality(serverId: string) {
     },
     lint: lintDefinitions(tools.map((x) => ({ name: x.name, title: x.title, description: x.description, inputSchema: x.inputSchema, annotations: x.annotations as Record<string, unknown> | null }))),
   });
+}
+
+const ICON_COLORS = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#65a30d', '#0891b2', '#4f46e5'];
+
+/** Demo icons: a monogram tile per fictional publisher (the real gateway fetches the site's icon or the GitHub avatar). */
+export function demoLibraryIcon(entryId: string): Response {
+  const e = LIBRARY.find((x) => x.id === entryId);
+  if (!e || e.namespace.startsWith('io.github.mcp-mass') || e.name === 'io.github.utilco/uptime-check') return new Response(null, { status: 404 });
+  const n = Number(entryId.slice(-2));
+  const letter = (e.title ?? e.name.split('/')[1]!).trim()[0]!.toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${ICON_COLORS[n % ICON_COLORS.length]}"/><text x="32" y="43" font-family="system-ui,sans-serif" font-size="30" font-weight="700" fill="#fff" text-anchor="middle">${letter}</text></svg>`;
+  return new Response(svg, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'max-age=86400' } });
 }

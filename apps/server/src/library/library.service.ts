@@ -13,7 +13,7 @@ import type {
   UpdateLibraryEntryBody,
   UpdateLibrarySettingsBody,
 } from '@neurouter/shared';
-import { computeGrade, githubRepo, lintDefinitions, type ConnectionFacts, type DefinitionLint, type GithubFacts, type GradeRemote, type LintableTool, type RegistryFacts, type RuntimeFacts } from '@neurouter/shared';
+import { computeGrade, githubRepo, lintDefinitions, summarizeParams, type ConnectionFacts, type DefinitionLint, type GithubFacts, type GradeRemote, type LintableTool, type RegistryFacts, type RuntimeFacts } from '@neurouter/shared';
 import type { AuditRecorder } from '../audit/recorder.js';
 import type { CoordinationStore } from '../coordination/types.js';
 import type { LibraryEntriesTable, MainDB } from '../db/schema.js';
@@ -32,6 +32,7 @@ import type { SettingsService } from '../settings/settings.service.js';
 import { connectUpstream } from '../upstream/client-factory.js';
 import { classifyUpstreamError } from '../upstream/errors.js';
 import { officialMeta, RegistryClient, type RegistryRecord } from './registry-client.js';
+import { LibraryIcons } from './library-icons.js';
 
 export const OFFICIAL_REGISTRY_URL = 'https://registry.modelcontextprotocol.io';
 export const LIBRARY_ATTRIBUTION = 'Data from the Official MCP Registry (CC0). Listing does not imply endorsement by the registry or by Neurouter.';
@@ -114,7 +115,11 @@ const ORDER = ['A', 'B', 'C', 'D', 'F'] as const;
 /* ------------------------------------------------------------------ service */
 
 export class LibraryService {
-  constructor(private readonly d: LibraryDeps) {}
+  readonly icons: LibraryIcons;
+
+  constructor(private readonly d: LibraryDeps) {
+    this.icons = new LibraryIcons(d.db, d.clock, d.fetch, d.settings);
+  }
 
   private get db() {
     return this.d.db;
@@ -529,6 +534,7 @@ export class LibraryService {
       inGateway,
       checkedAt: toIsoOrNull(r.checked_at),
       updatedAt: toIso(r.registry_updated_at ?? r.updated_at),
+      iconUrl: `/api/library/${r.id}/icon`,
     };
   }
 
@@ -552,7 +558,7 @@ export class LibraryService {
       publishedAt: toIsoOrNull(r.published_at),
       statusMessage: r.status_message,
       quality,
-      check: stored ? { checkedAt: stored.checkedAt, connection: stored.connection, tools: stored.tools, github: stored.github } : null,
+      check: stored ? { checkedAt: stored.checkedAt, connection: stored.connection ? { ...stored.connection, paymentRequired: stored.connection.paymentRequired ?? false } : null, tools: stored.tools.map((t) => ({ ...t, title: t.title ?? null, description: t.description ?? '', params: t.params ?? [], annotations: t.annotations ?? {} })), github: stored.github } : null,
       draft: remotes.length ? await this.draft(r, remotes, stored) : null,
       serverJson: (parseJsonColumn(r.server_json) as Record<string, unknown>) ?? {},
       sourceUrl: `${cfg.registryUrl}/v0.1/servers/${encodeURIComponent(r.name)}/versions/latest`,
@@ -627,6 +633,7 @@ export class LibraryService {
       lint: conn?.lint ? { score: conn.lint.score, injection: conn.lint.injection, hiddenUnicode: conn.lint.hiddenUnicode, contradictions: conn.lint.contradictions, oversized: conn.lint.oversized } : null,
       githubOwner: github?.owner ?? null,
     };
+    await this.icons.refresh(r).catch((err: unknown) => this.d.log.warn({ err, entry: r.name }, 'library icon refresh failed'));
     const updated = { ...r, check_result: toJsonColumn(stored), checked_at: this.d.clock.now() } as EntryRow;
     const q = this.gradeRow(updated, await this.contextFor(r));
     await this.db
@@ -680,7 +687,7 @@ export class LibraryService {
     return done;
   }
 
-  private async probe(remote: LibraryRemote): Promise<{ connection: LibraryCheck['connection']; lint: DefinitionLint | null }> {
+  private async probe(remote: LibraryRemote): Promise<{ connection: LibraryCheck['connection']; lint: (Omit<DefinitionLint, 'tools'> & { tools: LibraryCheck['tools'] }) | null }> {
     const fail = (error: string, paymentRequired = false) => ({ connection: { ok: false, authRequired: false, oauthDiscovery: false, paymentRequired, protocolVersion: null, serverInfo: null, latencyMs: null, toolCount: null, error }, lint: null });
     if (remote.variables.length) return { connection: null, lint: null };
     try {
@@ -694,10 +701,25 @@ export class LibraryService {
     try {
       conn = await connectUpstream({ url: remote.url, transport: remote.type === 'sse' ? 'sse' : 'streamable_http', headers: {} }, this.d.probeFetch, { timeoutMs: 10_000, signal });
       const latencyMs = Math.round(performance.now() - start);
-      const tools = (await conn.client.listTools(undefined, { timeout: 10_000, signal })).tools as LintableTool[];
+      const tools = ((await conn.client.listTools(undefined, { timeout: 10_000, signal })).tools as LintableTool[]).slice(0, 500);
+      const lint = lintDefinitions(tools);
+      // what the entry page shows: description, parameters and behaviour hints next to the lint result
+      const shown: LibraryCheck['tools'] = lint.tools.map((l, i) => {
+        const t = tools[i]!;
+        const a = (t.annotations ?? {}) as Record<string, unknown>;
+        const hint = (k: string) => (typeof a[k] === 'boolean' ? { [k]: a[k] as boolean } : {});
+        return {
+          ...l,
+          name: String(t.name).slice(0, 128),
+          title: typeof t.title === 'string' ? t.title.slice(0, 200) : typeof a.title === 'string' ? (a.title as string).slice(0, 200) : null,
+          description: (t.description ?? '').slice(0, 4000),
+          params: summarizeParams(t.inputSchema),
+          annotations: { ...hint('readOnlyHint'), ...hint('destructiveHint'), ...hint('idempotentHint'), ...hint('openWorldHint') },
+        };
+      });
       return {
         connection: { ok: true, authRequired: false, oauthDiscovery: false, paymentRequired: false, protocolVersion: conn.protocolVersion, serverInfo: conn.serverInfo ? { name: conn.serverInfo.name.slice(0, 200), version: conn.serverInfo.version.slice(0, 100) } : null, latencyMs, toolCount: tools.length, error: null },
-        lint: lintDefinitions(tools.slice(0, 500)),
+        lint: { ...lint, tools: shown },
       };
     } catch (err) {
       const e = classifyUpstreamError(err, signal);

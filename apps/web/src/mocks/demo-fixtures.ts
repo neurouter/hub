@@ -97,6 +97,7 @@ export function demoFixtures(): ContractFixtures {
       return { ...L.LIBRARY_STATUS, ...(b.enabled !== undefined ? { enabled: b.enabled } : {}), ...(b.autoCheck !== undefined ? { autoCheck: b.autoCheck } : {}), ...(b.registryUrl ? { registryUrl: b.registryUrl } : {}), ...(b.githubToken !== undefined ? { hasGithubToken: b.githubToken !== null } : {}) };
     },
     'library.sync': { started: true },
+    'library.icon': (c: Ctx) => L.demoLibraryIcon(param(c, 'id')),
     'library.list': (c: Ctx) => page(L.libraryList(qs(c))),
     'library.get': (c: Ctx) => L.LIBRARY.find((e) => e.id === param(c, 'id')) ?? notFound(),
     'library.check': (c: Ctx) => {

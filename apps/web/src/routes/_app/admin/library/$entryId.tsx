@@ -13,6 +13,8 @@ import { DetailList, Page, Section } from '@/components/layout/section';
 import { Pill } from '@/components/status/status';
 import { FlagList, GradeBadge, GradeBreakdown, TrustBadge } from '@/features/library/grade';
 import { libraryKeys, libraryEntryQuery } from '@/features/library/queries';
+import { ToolList } from '@/features/library/tool-list';
+import { ServerIcon } from '@/components/status/server-icon';
 import { apiFetch } from '@/lib/api-client';
 import { formatDate, formatDuration, formatRelative } from '@/lib/format';
 import { notifyError, notifySuccess } from '@/lib/notify';
@@ -73,20 +75,6 @@ function CheckSection({ e }: { e: LibraryEntryDetail }) {
           { label: 'Checked', value: formatRelative(c.checkedAt) },
         ]}
       />
-      {c.tools.length ? (
-        <table className="w-full text-[13.5px]">
-          <caption className="mb-2 text-left text-xs font-medium text-muted-foreground">Tool definitions ({c.tools.length})</caption>
-          <tbody>
-            {c.tools.map((t) => (
-              <tr key={t.name} className="border-t align-top">
-                <td className="py-2 pr-3 font-mono text-[12.5px] break-all">{t.name}</td>
-                <td className="py-2 pr-3 tabular-nums">{Math.round(t.score * 100)}</td>
-                <td className="py-2 text-xs text-muted-foreground">{t.issues.length ? t.issues.join(' · ') : 'No issues'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : null}
     </div>
   );
 }
@@ -125,7 +113,12 @@ function EntryPage() {
     <Page>
       <PageHeader
         title={e.title ?? e.name.split('/').pop()!}
-        leading={<GradeBadge grade={e.quality.grade} confidence={e.quality.confidence} size="lg" />}
+        leading={
+          <span className="flex items-center gap-2.5">
+            <ServerIcon server={{ id: e.id, name: e.title ?? e.name.split('/').pop()!, iconUrl: e.iconUrl }} size="lg" />
+            <GradeBadge grade={e.quality.grade} confidence={e.quality.confidence} size="lg" />
+          </span>
+        }
         description={e.description || undefined}
         actions={
           <>
@@ -187,6 +180,9 @@ function EntryPage() {
           </Section>
         </div>
       </div>
+      <Section title="Tools" description={e.check ? `As listed by the last check, ${formatRelative(e.check.checkedAt)}. Behaviour hints are the server's own claims.` : undefined}>
+        <ToolList check={e.check} />
+      </Section>
       <Section title="Registry record" description={<a href={e.sourceUrl} target="_blank" rel="noreferrer noopener" className="underline-offset-4 hover:underline">{e.sourceUrl}</a>}>
         <JsonViewer value={e.serverJson} label="server.json" collapseAfter={60} />
       </Section>

@@ -9,6 +9,7 @@ import { m0010_approval_api_key } from './main/0010_approval_api_key.js';
 import { m0011_pinning_mode } from './main/0011_pinning_mode.js';
 import { m0012_library } from './main/0012_library.js';
 import { m0013_library_search } from './main/0013_library_search.js';
+import { m0014_library_icons } from './main/0014_library_icons.js';
 import { m0004_audit } from './audit/0004_audit.js';
 import { m0005_observability } from './audit/0005_observability.js';
 import type { DialectMigration } from './types.js';
@@ -30,6 +31,7 @@ export const MAIN_MIGRATIONS: readonly DialectMigration[] = [
   m0011_pinning_mode,
   m0012_library,
   m0013_library_search,
+  m0014_library_icons,
 ];
 
 export const AUDIT_MIGRATIONS: readonly DialectMigration[] = [m0004_audit, m0005_observability];

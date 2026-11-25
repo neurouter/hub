@@ -3,6 +3,7 @@ import { FakeUpstream } from '../../test-utils/fake-upstream.js';
 import { createTestContext, FakeClock, type TestContext, type TestUser } from '../test/fakes/context.js';
 
 const REG = 'https://registry.test';
+const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8cf000000ff00fb03fd2c2c0b0000000049454e44ae426082', 'hex');
 const T0 = Date.UTC(2026, 10, 24, 10, 0, 0);
 
 interface Rec {
@@ -70,6 +71,8 @@ describe('MCP server library', () => {
       libraryFetch: async (input) => {
         const u = new URL(String(input));
         requests.push(u.pathname + u.search);
+        if (u.host === 'avatars.githubusercontent.com') return u.pathname === '/example' ? new Response(PNG, { headers: { 'content-type': 'image/png' } }) : new Response('', { status: 404 });
+        if (u.host === 'example.com') return new Response('<html><head><title>x</title></head></html>', { headers: { 'content-type': 'text/html' } });
         if (u.host === 'api.github.com') {
           if (u.pathname === '/repos/example/weather-mcp') return Response.json({ archived: false, stargazers_count: 820, pushed_at: '2026-11-20T00:00:00Z', license: { spdx_id: 'Apache-2.0' }, owner: { type: 'Organization', login: 'example' } });
           return new Response('{}', { status: 404 });
@@ -204,6 +207,8 @@ describe('MCP server library', () => {
     const d = res.json();
     expect(d.check.connection).toMatchObject({ ok: true, authRequired: false, toolCount: 2, serverInfo: { name: 'fake-upstream' }, error: null });
     expect(d.check.tools.map((t: { name: string; score: number }) => [t.name, t.score])).toEqual([['get_forecast', 0.9], ['x', 0.1]]);
+    expect(d.check.tools[0]).toMatchObject({ description: 'Returns the hourly forecast for a city for the next 48 hours.', params: [{ name: 'city', type: 'string', required: true, description: 'City name' }], annotations: {} });
+    expect(d.check.tools[1].params).toEqual([{ name: 'a', type: 'any', required: false, description: null }]);
     expect(d.check.github).toMatchObject({ repo: 'example/weather-mcp', found: true, stars: 820, license: 'Apache-2.0', ownerType: 'Organization' });
     expect(d.quality.sources).toEqual(['registry', 'check', 'definitions', 'github']);
     expect(d.quality.confidence).toBe('high');
@@ -253,6 +258,34 @@ describe('MCP server library', () => {
     await ctx.as(admin, { method: 'PATCH', url: '/api/library/settings', payload: { autoCheck: false } });
     clock.advance(8 * 86_400_000);
     expect(await ctx.s.library.checkBatch(20)).toBe(0);
+  });
+
+  it('icons: none while sync is off; then favicon → GitHub avatar, cached and served same-origin', async () => {
+    await enable();
+    await ctx.s.library.sync();
+    const id = (await list('?q=weather')).items[0].id;
+    expect((await list('?q=weather')).items[0].iconUrl).toBe(`/api/library/${id}/icon`);
+    await ctx.as(admin, { method: 'PATCH', url: '/api/library/settings', payload: { enabled: false } });
+    requests.length = 0;
+    expect((await ctx.as(admin, { method: 'GET', url: `/api/library/${id}/icon` })).statusCode).toBe(404);
+    expect(requests).toEqual([]);
+    await ctx.as(admin, { method: 'PATCH', url: '/api/library/settings', payload: { enabled: true } });
+    const icon = await ctx.as(admin, { method: 'GET', url: `/api/library/${id}/icon` });
+    expect(icon.statusCode).toBe(200);
+    expect(icon.headers['content-type']).toBe('image/png');
+    expect(icon.headers['content-security-policy']).toContain('sandbox');
+    // the site had no icon links and no favicon.ico, so the repository owner's avatar was used
+    expect(requests).toEqual(['/', '/favicon.ico', '/example?size=96']);
+    requests.length = 0;
+    expect((await ctx.as(admin, { method: 'GET', url: `/api/library/${id}/icon` })).statusCode).toBe(200);
+    expect(requests).toEqual([]); // cached
+    expect((await ctx.as(alice, { method: 'GET', url: `/api/library/${id}/icon` })).statusCode).toBe(403);
+    // a miss is cached too
+    const spam = (await list('?q=utility')).items[0].id;
+    expect((await ctx.as(admin, { method: 'GET', url: `/api/library/${spam}/icon` })).statusCode).toBe(404);
+    requests.length = 0;
+    expect((await ctx.as(admin, { method: 'GET', url: `/api/library/${spam}/icon` })).statusCode).toBe(404);
+    expect(requests).toEqual([]);
   });
 
   it('hide, Add to gateway (provenance), and the grade of a registered server', async () => {

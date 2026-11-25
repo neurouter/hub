@@ -16,6 +16,7 @@ import { Segmented } from '@/components/filters/segmented';
 import { PageHeader } from '@/components/layout/page-header';
 import { Page, Toolbar } from '@/components/layout/section';
 import { Pill } from '@/components/status/status';
+import { ServerIcon } from '@/components/status/server-icon';
 import { FlagPill, GradeBadge, TrustBadge } from '@/features/library/grade';
 import { LibrarySettingsDialog } from '@/features/library/settings-dialog';
 import { libraryKeys, libraryListQuery, libraryStatusQuery } from '@/features/library/queries';
@@ -50,7 +51,7 @@ function SyncLine({ st }: { st: LibraryStatus }) {
 function EntryItem({ e }: { e: LibraryEntryRow }) {
   return (
     <li className="flex gap-3.5 p-4 hover:bg-muted/40">
-      <GradeBadge grade={e.grade} confidence={e.confidence} />
+      <ServerIcon server={{ id: e.id, name: e.title ?? e.name.split('/').pop()!, iconUrl: e.iconUrl }} />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <Link to="/admin/library/$entryId" params={{ entryId: e.id }} className="font-medium underline-offset-4 hover:underline">
@@ -69,6 +70,7 @@ function EntryItem({ e }: { e: LibraryEntryRow }) {
           {e.topFlag && e.topFlag.severity !== 'info' && e.topFlag.code !== 'domain_mismatch' ? <FlagPill flag={e.topFlag} /> : null}
         </div>
       </div>
+      <GradeBadge grade={e.grade} confidence={e.confidence} />
     </li>
   );
 }

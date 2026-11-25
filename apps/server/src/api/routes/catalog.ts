@@ -127,6 +127,22 @@ export async function catalogRoutes(app: FastifyInstance, s: Services): Promise<
     requireAdmin(req);
     return s.library.get(req.params.id);
   });
+  registerEndpoint(app, api.library.icon, async (req, reply) => {
+    requireAdmin(req);
+    const icon = await s.library.icons.get(req.params.id);
+    if (!icon) {
+      reply.header('cache-control', 'private, max-age=3600');
+      throw AppError.notFound('Icon');
+    }
+    const etag = `"${icon.etag}"`;
+    reply
+      .header('etag', etag)
+      .header('cache-control', 'private, max-age=86400')
+      .header('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+      .header('x-content-type-options', 'nosniff');
+    if (req.headers['if-none-match'] === etag) return reply.status(304).send();
+    return reply.type(icon.contentType).status(200).send(icon.bytes);
+  });
   registerEndpoint(app, api.library.check, async (req) => s.library.check(req.params.id, requireAdmin(req).id));
   registerEndpoint(app, api.library.update, async (req) => s.library.update(req.params.id, req.body, requireAdmin(req).id));
 }

@@ -691,6 +691,16 @@ export interface LibrarySyncStateTable {
   updated_at: number;
 }
 
+export interface LibraryIconsTable {
+  entry_id: string;
+  source_url: string | null;
+  content_type: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml' | null;
+  bytes: Buffer | null;
+  etag: string | null;
+  fetched_at: number;
+  error: string | null;
+}
+
 export interface MainDB {
   users: UsersTable;
   user_roles: UserRolesTable;
@@ -732,6 +742,7 @@ export interface MainDB {
   jobs: JobsTable;
   library_entries: LibraryEntriesTable;
   library_sync_state: LibrarySyncStateTable;
+  library_icons: LibraryIconsTable;
 }
 
 /** Audit database (AUDIT_DATABASE_URL, defaults to DATABASE_URL): audit log, sessions, rollups. */
@@ -787,6 +798,7 @@ export const MAIN_TABLE_COLUMNS = {
   coord_signals: ['channel', 'payload', 'created_at'],
   jobs: ['id', 'kind', 'status', 'params', 'progress', 'result', 'error', 'created_by', 'created_at', 'finished_at'],
   library_entries: ['id', 'name', 'version', 'status', 'status_message', 'title', 'description', 'namespace', 'website_url', 'repository_url', 'remotes', 'packages', 'has_remote', 'has_packages', 'has_icons', 'remote_url', 'transport', 'server_json', 'published_at', 'registry_updated_at', 'seen_at', 'hidden', 'imported_server_id', 'check_result', 'checked_at', 'grade', 'grade_score', 'confidence', 'trust', 'top_flag', 'graded_at', 'search_text', 'created_at', 'updated_at'],
+  library_icons: ['entry_id', 'source_url', 'content_type', 'bytes', 'etag', 'fetched_at', 'error'],
   library_sync_state: ['id', 'running', 'mode', 'pages', 'cursor', 'checkpoint', 'run_started_at', 'last_run_at', 'last_success_at', 'last_full_at', 'last_error', 'updated_at'],
 } as const satisfies { [T in keyof MainDB]: readonly (keyof MainDB[T])[] };
 

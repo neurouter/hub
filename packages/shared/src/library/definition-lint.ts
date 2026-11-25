@@ -171,3 +171,41 @@ export function lintDefinitions(tools: readonly LintableTool[]): DefinitionLint 
   }
   return { tools: linted, score, injection, hiddenUnicode, contradictions, oversized };
 }
+
+export interface ToolParamSummary {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string | null;
+}
+
+function typeOf(p: Record<string, unknown>): string {
+  if (Array.isArray(p.enum)) {
+    const vals = p.enum.slice(0, 6).map((v) => String(v));
+    return `one of: ${vals.join(', ')}${p.enum.length > 6 ? ', …' : ''}`;
+  }
+  if (p.const !== undefined) return `= ${String(p.const)}`;
+  const t = p.type;
+  if (Array.isArray(t)) return t.filter((x) => x !== 'null').join(' | ') + (t.includes('null') ? ' (nullable)' : '');
+  if (t === 'array') {
+    const items = p.items && typeof p.items === 'object' ? typeOf(p.items as Record<string, unknown>) : 'any';
+    return `${items.includes(' ') ? `(${items})` : items}[]`;
+  }
+  if (typeof t === 'string') return t;
+  const alt = (p.anyOf ?? p.oneOf) as unknown;
+  if (Array.isArray(alt)) return alt.map((a) => (a && typeof a === 'object' ? typeOf(a as Record<string, unknown>) : 'any')).join(' | ');
+  return 'any';
+}
+
+/** Top-level parameters of a tool's input schema, for display. */
+export function summarizeParams(schema: unknown, max = 50): ToolParamSummary[] {
+  const required = new Set(Array.isArray((schema as { required?: unknown } | null)?.required) ? ((schema as { required: unknown[] }).required.filter((x) => typeof x === 'string') as string[]) : []);
+  return schemaProperties(schema)
+    .slice(0, max)
+    .map(([name, p]) => ({
+      name: name.slice(0, 100),
+      type: typeOf(p).slice(0, 120),
+      required: required.has(name),
+      description: typeof p.description === 'string' && p.description.trim() ? p.description.trim().slice(0, 1000) : null,
+    }));
+}

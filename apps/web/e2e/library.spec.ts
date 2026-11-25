@@ -37,6 +37,8 @@ test('enable sync, search, check and add a library server to the gateway', async
   await expect(page.getByText(/^Checked/).first()).toBeVisible();
   await expect(page.getByText(/Connected without credentials/)).toBeVisible();
   await expect(page.getByRole('table', { name: 'Grade breakdown' })).toContainText('Tool definitions');
+  // the tools the check listed, with their parameters
+  await expect(page.getByRole('list', { name: 'Tools' }).getByRole('listitem').first()).toBeVisible();
   // plain-HTTP endpoint: a red flag that caps the grade
   await expect(page.getByRole('list', { name: 'Warnings' })).toContainText('The endpoint is plain HTTP.');
 

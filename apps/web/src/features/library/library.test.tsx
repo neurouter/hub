@@ -62,6 +62,20 @@ describe('library', () => {
     expect(created).toMatchObject({ name: 'AcmeCloud Object Storage', slug: 'object-storage', trusted: false, tags: ['library'], libraryEntryId: e.id, auth: { type: 'shared_bearer', token: 'tok' } });
   });
 
+  it('entry page lists the tools with parameters, behaviour hints and lint notes', async () => {
+    const { user } = await renderRoute(`/admin/library/${byName('io.github.fjordlabs/postgres-readonly').id}`);
+    const tools = await screen.findByRole('list', { name: 'Tools' });
+    expect(within(tools).getAllByRole('listitem')).toHaveLength(4);
+    const runQuery = within(tools).getAllByRole('listitem')[3]!;
+    expect(runQuery).toHaveTextContent('run_query');
+    expect(runQuery).toHaveTextContent('Read-only');
+    expect(within(runQuery).getByRole('table', { name: 'Parameters of run_query' })).toHaveTextContent('A single SELECT statement');
+    // the auth-only server explains why there are no tools
+    await user.click(screen.getByRole('link', { name: 'Library' }));
+    await renderRoute(`/admin/library/${byName('com.northwind/helpdesk').id}`);
+    expect(await screen.findByText(/requires sign-in before it lists its tools/)).toBeInTheDocument();
+  });
+
   it('server page shows the quality grade from gateway evidence', async () => {
     await renderRoute(`/admin/servers/${SERVER_IDS.postgres}`);
     const section = await screen.findByRole('region', { name: 'Quality grade' }).catch(() => null);

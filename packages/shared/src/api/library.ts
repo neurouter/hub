@@ -112,13 +112,31 @@ export const LibraryEntryRow = z.object({
   inGateway: z.object({ id: Id, name: z.string() }).nullable(),
   checkedAt: IsoDateTime.nullable(),
   updatedAt: IsoDateTime,
+  /** Same-origin icon proxy (registry icon, site favicon or GitHub avatar); 404 when there is none. */
+  iconUrl: z.string(),
 });
 export type LibraryEntryRow = z.infer<typeof LibraryEntryRow>;
 
+export const LibraryToolParam = z.object({
+  name: z.string(),
+  /** Readable type, e.g. "string", "integer", "string[]", "one of: asc, desc". */
+  type: z.string(),
+  required: z.boolean(),
+  description: z.string().nullable(),
+});
+export type LibraryToolParam = z.infer<typeof LibraryToolParam>;
+
+/** A tool as listed by the last check (defaults keep checks stored before these fields valid). */
 export const LibraryCheckTool = z.object({
   name: z.string(),
   score: z.number().min(0).max(1),
   issues: z.array(z.string()),
+  title: z.string().nullable().default(null),
+  description: z.string().default(''),
+  params: z.array(LibraryToolParam).default([]),
+  annotations: z
+    .object({ readOnlyHint: z.boolean().optional(), destructiveHint: z.boolean().optional(), idempotentHint: z.boolean().optional(), openWorldHint: z.boolean().optional() })
+    .default({}),
 });
 export type LibraryCheckTool = z.infer<typeof LibraryCheckTool>;
 
@@ -252,6 +270,10 @@ export const libraryEndpoints = {
   check: endpoint({
     method: 'POST', path: '/api/library/:id/check', kind: 'json', access: ['admin'],
     summary: 'Connect without credentials, lint tool definitions, look up the repository; regrade', params: IdParams, response: LibraryEntryDetail,
+  }),
+  icon: endpoint({
+    method: 'GET', path: '/api/library/:id/icon', kind: 'binary', access: ['admin'],
+    summary: 'Entry icon (fetched through the strict outbound policy, validated, cached)', params: IdParams,
   }),
   update: endpoint({
     method: 'PATCH', path: '/api/library/:id', kind: 'json', access: ['admin'],
