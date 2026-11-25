@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  ActivityIcon, BotIcon, ClockIcon, FileTextIcon, InboxIcon, LayoutGridIcon, LineChartIcon, LinkIcon, ListIcon,
+  ActivityIcon, BotIcon, LibraryBigIcon, ClockIcon, FileTextIcon, InboxIcon, LayoutGridIcon, LineChartIcon, LinkIcon, ListIcon,
   PlugIcon, ServerIcon, ShieldCheckIcon, SlidersHorizontalIcon, SquareIcon, UserPlusIcon, UsersIcon, WrenchIcon,
 } from 'lucide-react';
 import { can, isAuditor, isOwnerScoped, isReadOnly, type BadgeKey, type Badges, type Capability, type Features, type Me } from '@neurouter/shared';
@@ -63,6 +63,7 @@ export const NAV: readonly NavGroupDef[] = [
       { id: 'groups', title: 'Groups', to: '/admin/groups', icon: ListIcon, capability: 'groups:read' },
       { id: 'agents-all', title: 'Agents', to: '/admin/agents', icon: BotIcon, capability: 'agents:readAll' },
       { id: 'servers', title: 'Servers', ownerTitle: 'My servers', to: '/admin/servers', icon: ServerIcon, capability: 'servers:read' },
+      { id: 'library', title: 'Library', to: '/admin/library', icon: LibraryBigIcon, capability: 'servers:create' },
       { id: 'tools', title: 'Tools', to: '/admin/tools', icon: WrenchIcon, capability: 'tools:read', badgeKey: 'toolsPendingReview', badgeTone: 'warning', badgeRequires: 'tools:write' },
       { id: 'acl', title: 'Access control', to: '/admin/access-control', icon: ShieldCheckIcon, capability: 'grants:read' },
     ],

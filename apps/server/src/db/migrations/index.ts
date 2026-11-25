@@ -7,6 +7,7 @@ import { m0008_oauth } from './main/0008_oauth.js';
 import { m0009_coordination } from './main/0009_coordination.js';
 import { m0010_approval_api_key } from './main/0010_approval_api_key.js';
 import { m0011_pinning_mode } from './main/0011_pinning_mode.js';
+import { m0012_library } from './main/0012_library.js';
 import { m0004_audit } from './audit/0004_audit.js';
 import { m0005_observability } from './audit/0005_observability.js';
 import type { DialectMigration } from './types.js';
@@ -26,6 +27,7 @@ export const MAIN_MIGRATIONS: readonly DialectMigration[] = [
   m0009_coordination,
   m0010_approval_api_key,
   m0011_pinning_mode,
+  m0012_library,
 ];
 
 export const AUDIT_MIGRATIONS: readonly DialectMigration[] = [m0004_audit, m0005_observability];

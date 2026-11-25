@@ -5,6 +5,8 @@
 Self-hosted **enterprise MCP gateway**. Agents connect to one `/mcp` endpoint and reach only the
 upstream MCP servers and tools they've been granted; every call is authenticated, authorized,
 rate-limited, audited and measured. The same server hosts the admin console and user portal.
+A built-in **server library** syncs the official MCP Registry (opt-in) and grades every server
+A–F by rules you can read ([how grading works](https://neurouter.com/docs/library)).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/gateway-dark.png">

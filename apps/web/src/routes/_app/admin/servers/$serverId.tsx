@@ -30,6 +30,7 @@ import { apiFetch } from '@/lib/api-client';
 import { DASH, formatDate, formatDateTime, formatRelative } from '@/lib/format';
 import type { AccessRequest } from '@neurouter/shared';
 import { ServerIcon } from '@/components/status/server-icon';
+import { ServerQuality } from '@/features/library/server-quality';
 
 const TABS = ['overview', 'tools', 'auth', 'health', 'access', 'settings'] as const;
 type Tab = (typeof TABS)[number];
@@ -142,6 +143,7 @@ function ServerDetailPage() {
               {spark.data ? <HealthChart data={spark.data} sparkline className="h-24" /> : <Skeleton className="h-24 w-full" />}
             </Section>
           </div>
+          <ServerQuality serverId={s.id} />
           <Section title="Sync history" description="Tool list syncs: scheduled, manual, and when the server announces changes." bodyClassName="p-0">
             <SyncHistory serverId={s.id} />
           </Section>

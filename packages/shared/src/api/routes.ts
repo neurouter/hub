@@ -16,6 +16,7 @@ import { redactionEndpoints } from './redaction.js';
 import { serverEndpoints } from './servers.js';
 import { sessionEndpoints } from './sessions.js';
 import { settingsEndpoints } from './settings.js';
+import { libraryEndpoints } from './library.js';
 import { jobEndpoints, systemEndpoints } from './system.js';
 import { toolEndpoints } from './tools.js';
 import { userEndpoints } from './users.js';
@@ -38,6 +39,7 @@ export const api = {
   users: userEndpoints,
   groups: groupEndpoints,
   servers: serverEndpoints,
+  library: libraryEndpoints,
   tools: toolEndpoints,
   grants: grantEndpoints,
   approvals: approvalEndpoints,

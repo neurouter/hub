@@ -20,6 +20,7 @@ const SAMPLE_ID: Record<string, string> = {
   sessions: D.SESSIONS[0]!.id,
   jobs: 'job-sync',
   approvals: D.APPROVALS[0]!.id,
+  library: '0193a000-0000-7000-8000-000000000701',
 };
 const RANGE = { from: '2026-11-23T10:00:00.000Z', to: '2026-11-24T10:00:00.000Z' };
 

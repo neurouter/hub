@@ -50,7 +50,7 @@ export function defaultAuth(type: ServerAuthType): ServerFormValues['auth'] {
   }
 }
 
-export function toCreateBody(v: z.output<typeof serverFormSchema>): CreateServerBody {
+export function toCreateBody(v: z.output<typeof serverFormSchema>, libraryEntryId?: string): CreateServerBody {
   const tags = v.tags.split(',').map((t) => t.trim()).filter(Boolean);
   return {
     name: v.name,
@@ -62,6 +62,7 @@ export function toCreateBody(v: z.output<typeof serverFormSchema>): CreateServer
     transport: v.transport,
     trusted: v.trusted,
     auth: v.auth,
+    ...(libraryEntryId ? { libraryEntryId } : {}),
   };
 }
 
@@ -106,12 +107,24 @@ function TestResult({ r }: { r: TestConnectionResult }) {
  * Register a server (§5.2, W3): basics, connection, authentication (discriminated union with
  * conditional fields), trust, then Test connection and Register.
  */
-export function ServerForm({ me, onRegistered }: { me: PickerOption; onRegistered: (id: string, initialSyncJobId: string) => void }) {
+export function ServerForm({
+  me,
+  onRegistered,
+  initial,
+  libraryEntryId,
+}: {
+  me: PickerOption;
+  onRegistered: (id: string, initialSyncJobId: string) => void;
+  /** Pre-fill (e.g. "Add to gateway" from the library). */
+  initial?: Partial<ServerFormValues>;
+  /** Library entry the server comes from (provenance). */
+  libraryEntryId?: string;
+}) {
   const form = useForm<ServerFormValues, unknown, z.output<typeof serverFormSchema>>({
     resolver: zodResolver(serverFormSchema),
-    defaultValues: { name: '', slug: '', description: '', tags: '', owner: me, url: '', transport: 'streamable_http', auth: { type: 'none' }, trusted: false },
+    defaultValues: { name: '', slug: '', description: '', tags: '', owner: me, url: '', transport: 'streamable_http', auth: { type: 'none' }, trusted: false, ...initial },
   });
-  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(!!initial?.slug);
   const authType = useWatch({ control: form.control, name: 'auth.type' });
   const slug = useWatch({ control: form.control, name: 'slug' });
   const discovery = useWatch({ control: form.control, name: 'auth.oauth.discovery' as never }) as unknown as 'auto' | 'manual' | undefined;
@@ -128,7 +141,7 @@ export function ServerForm({ me, onRegistered }: { me: PickerOption; onRegistere
     },
   });
   const register = useMutation({
-    mutationFn: (v: z.output<typeof serverFormSchema>) => apiFetch(api.servers.create, { body: toCreateBody(v) }),
+    mutationFn: (v: z.output<typeof serverFormSchema>) => apiFetch(api.servers.create, { body: toCreateBody(v, libraryEntryId) }),
     onSuccess: (s) => onRegistered(s.id, s.initialSync.jobId),
     onError: (err) => applyServerErrors(form, err),
   });

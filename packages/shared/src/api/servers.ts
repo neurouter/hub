@@ -3,6 +3,7 @@ import { HealthStatus, OAuthClientIdMode, PinningMode, ServerAuthType, ServerEra
 import { SLUG_REGEX } from '../mcp/naming.js';
 import { Actions, CursorQuery, Id, IdParams, IsoDateTime, IsoDateTimeInput, JobAccepted, Page, Ref, queryOptional, sortParam } from './common.js';
 import { endpoint } from './endpoint.js';
+import { QualityGrade } from './library.js';
 
 export const Health = z.object({
   status: HealthStatus,
@@ -132,6 +133,8 @@ export const CreateServerBody = z.object({
   syncIntervalMin: SyncIntervalMin.optional(),
   autoApproveNewTools: z.boolean().optional(),
   pinningMode: PinningMode.default('strict'),
+  /** The library entry this server was added from (provenance; shown on the entry as "In gateway"). */
+  libraryEntryId: Id.optional(),
 });
 export type CreateServerBody = z.input<typeof CreateServerBody>;
 
@@ -257,6 +260,10 @@ export const serverEndpoints = {
   syncRuns: endpoint({
     method: 'GET', path: '/api/servers/:id/sync-runs', kind: 'json', access: ['owner', 'auditor'],
     summary: 'Tool sync history', params: IdParams, query: CursorQuery, response: Page(SyncRun),
+  }),
+  quality: endpoint({
+    method: 'GET', path: '/api/servers/:id/quality', kind: 'json', access: ['owner', 'auditor'],
+    summary: 'Deterministic quality grade from health, definitions, usage and (if imported) registry data', params: IdParams, response: QualityGrade,
   }),
   healthCheck: endpoint({
     method: 'POST', path: '/api/servers/:id/health-check', kind: 'json', access: ['owner'],

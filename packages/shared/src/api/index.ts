@@ -8,6 +8,7 @@ export * from './users.js';
 export * from './groups.js';
 export * from './agents.js';
 export * from './servers.js';
+export * from './library.js';
 export * from './tools.js';
 export * from './grants.js';
 export * from './access-requests.js';

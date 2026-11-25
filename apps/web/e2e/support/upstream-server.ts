@@ -48,12 +48,26 @@ createServer(async (req, res) => {
   try {
     const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
     if (url.pathname === '/healthz') return void res.end('ok');
+    // a one-page MCP registry for the library test; its remote is the calculator above
+    if (url.pathname === '/registry/v0.1/servers') {
+      res.setHeader('content-type', 'application/json');
+      const meta = { 'io.modelcontextprotocol.registry/official': { status: 'active', isLatest: true, publishedAt: '2026-06-01T00:00:00Z', updatedAt: '2026-11-01T00:00:00Z' } };
+      return void res.end(
+        JSON.stringify({
+          servers: [
+            { server: { name: 'io.github.e2e-labs/calculator', title: 'E2E Calculator', description: 'Adds and multiplies numbers for end-to-end tests', version: '1.2.0', remotes: [{ type: 'streamable-http', url: `http://127.0.0.1:${port}/library/calc/mcp` }] }, _meta: meta },
+            { server: { name: 'io.github.e2e-labs/files', description: 'Local files over stdio', version: '0.1.0', packages: [{ registryType: 'npm', identifier: '@e2e/files', transport: { type: 'stdio' } }] }, _meta: meta },
+          ],
+          metadata: { count: 2 },
+        }),
+      );
+    }
     const m = /^\/mutable\/([\w-]+)\/(mcp|change)$/.exec(url.pathname);
     if (m?.[2] === 'change') {
       mutableFor(m[1]!).tools = [echoTool(true)];
       return void res.end('changed');
     }
-    const upstream = url.pathname === '/calc/mcp' ? calc : m ? mutableFor(m[1]!) : null;
+    const upstream = url.pathname === '/calc/mcp' || url.pathname === '/library/calc/mcp' ? calc : m ? mutableFor(m[1]!) : null;
     if (!upstream) {
       res.statusCode = 404;
       return void res.end('not found');

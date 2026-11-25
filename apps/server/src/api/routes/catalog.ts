@@ -20,6 +20,7 @@ export async function catalogRoutes(app: FastifyInstance, s: Services): Promise<
   registerEndpoint(app, api.servers.create, async (req) => {
     const user = requireCap(req, 'servers:create');
     const id = await s.servers.create(req.body, user);
+    if (req.body.libraryEntryId) await s.library.linkImported(req.body.libraryEntryId, id);
     const jobId = await s.catalog.startSync(id, 'manual', user.id, { initial: true });
     return { ...(await s.servers.get(id, { ...user, ownedServerIds: [...user.ownedServerIds, id] })), initialSync: { jobId } };
   });
@@ -30,6 +31,10 @@ export async function catalogRoutes(app: FastifyInstance, s: Services): Promise<
     // a new (or removed) icon override is fetched now, so the response already carries it
     if (req.body.iconUrl !== undefined) await s.icons.refresh(req.params.id).catch(() => null);
     return s.servers.get(req.params.id, user);
+  });
+  registerEndpoint(app, api.servers.quality, async (req) => {
+    await s.servers.loadForViewer(req.params.id, requireUser(req));
+    return s.library.serverQuality(req.params.id);
   });
   registerEndpoint(app, api.servers.delete, async (req) => s.servers.delete(req.params.id, requireAdmin(req)));
   registerEndpoint(app, api.servers.putCredentials, async (req) => s.servers.putCredentials(req.params.id, req.body, requireAdmin(req)));
@@ -106,4 +111,22 @@ export async function catalogRoutes(app: FastifyInstance, s: Services): Promise<
       return { ok: false, issuer, authorizationEndpoint: null, error: (err as Error).message.slice(0, 300) };
     }
   });
+
+  /* ---------------------------------------------------------------- MCP server library */
+  registerEndpoint(app, api.library.status, async (req) => {
+    requireAdmin(req);
+    return s.library.status();
+  });
+  registerEndpoint(app, api.library.updateSettings, async (req) => s.library.updateSettings(req.body, requireAdmin(req).id));
+  registerEndpoint(app, api.library.sync, async (req) => ({ started: await s.library.startSync(requireAdmin(req).id) }));
+  registerEndpoint(app, api.library.list, async (req) => {
+    requireAdmin(req);
+    return s.library.list(req.query);
+  });
+  registerEndpoint(app, api.library.get, async (req) => {
+    requireAdmin(req);
+    return s.library.get(req.params.id);
+  });
+  registerEndpoint(app, api.library.check, async (req) => s.library.check(req.params.id, requireAdmin(req).id));
+  registerEndpoint(app, api.library.update, async (req) => s.library.update(req.params.id, req.body, requireAdmin(req).id));
 }

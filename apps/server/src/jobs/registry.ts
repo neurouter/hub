@@ -28,6 +28,9 @@ export function registerJobs(scheduler: JobScheduler, s: Services): void {
   // vectors for new/changed tools (no-op until the embedding model is ready; tool sync also kicks it)
   scheduler.register({ name: 'search-index', schedule: '45 */2 * * * *', leaseMs: 10 * 60_000, run: async () => void (await s.indexer.run()) });
 
+  // MCP server library: hourly, as the registry asks aggregators to (no-op while sync is disabled)
+  scheduler.register({ name: 'library-sync', schedule: '0 7 * * * *', leaseMs: 60 * 60_000, run: async () => void (await s.library.sync()) });
+
   registerAuditJobs(scheduler, s);
 }
 

@@ -42,7 +42,7 @@ export interface TestContext {
   close(): Promise<void>;
 }
 
-export async function createTestContext(opts: { env?: Record<string, string>; clock?: Clock; auditStore?: AuditStore } & Partial<Pick<ServiceInputs, 'oidcProvider' | 'upstreamFetch' | 'outboundFetch' | 'archive' | 'otelLogProvider' | 'embedder'>> & { extend?: (s: Services) => void } = {}): Promise<TestContext> {
+export async function createTestContext(opts: { env?: Record<string, string>; clock?: Clock; auditStore?: AuditStore } & Partial<Pick<ServiceInputs, 'oidcProvider' | 'upstreamFetch' | 'outboundFetch' | 'archive' | 'otelLogProvider' | 'embedder' | 'libraryFetch' | 'libraryProbeFetch'>> & { extend?: (s: Services) => void } = {}): Promise<TestContext> {
   const config = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'warn', PUBLIC_URL: 'http://gw.test', ...opts.env });
   const dbs = await createTestDatabases();
   const logs: string[] = [];
@@ -59,6 +59,9 @@ export async function createTestContext(opts: { env?: Record<string, string>; cl
     embedder: opts.embedder ?? disabledEmbedder(),
     upstreamFetch: opts.upstreamFetch ?? (() => async () => new Response('no upstream in this test', { status: 502 })),
     outboundFetch: opts.outboundFetch ?? (async () => new Response('no outbound in this test', { status: 502 })),
+    libraryFetch: opts.libraryFetch ?? (async () => new Response('no registry in this test', { status: 502 })),
+    libraryProbeFetch: opts.libraryProbeFetch ?? (async () => new Response('no library probe in this test', { status: 502 })),
+    librarySleep: async () => {},
   });
   opts.extend?.(s);
   await initServices(s);

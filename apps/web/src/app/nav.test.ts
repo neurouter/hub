@@ -16,7 +16,7 @@ describe('buildNav (sidebar per role, approved prototype)', () => {
     expect(shape(buildNav(meFixture('admin'), badgesFixture()))).toEqual([
       { label: 'Portal', note: null, items: ['Catalog', 'My agents', 'Connections', 'Connect a client', 'My activity', 'My requests'] },
       { label: 'Review', note: null, items: ['Approvals', 'Access requests'] },
-      { label: 'Administration', note: null, items: ['Users', 'Groups', 'Agents', 'Servers', 'Tools', 'Access control'] },
+      { label: 'Administration', note: null, items: ['Users', 'Groups', 'Agents', 'Servers', 'Library', 'Tools', 'Access control'] },
       { label: 'Audit & observability', note: null, items: ['Overview', 'Sessions', 'Audit log'] },
       { label: 'Settings', note: null, items: ['Gateway settings'] },
     ]);

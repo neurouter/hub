@@ -639,6 +639,58 @@ export interface McpSessionsTable {
 }
 
 /** Control-plane database (DATABASE_URL). */
+export interface LibraryEntriesTable {
+  id: string;
+  name: string;
+  version: string;
+  status: 'active' | 'deprecated' | 'deleted';
+  status_message: string | null;
+  title: string | null;
+  description: Generated<string>;
+  namespace: string;
+  website_url: string | null;
+  repository_url: string | null;
+  remotes: Generated<JsonColumn>;
+  packages: Generated<JsonColumn>;
+  has_remote: Generated<BoolColumn>;
+  has_packages: Generated<BoolColumn>;
+  has_icons: Generated<BoolColumn>;
+  remote_url: string | null;
+  transport: 'streamable_http' | 'sse' | null;
+  server_json: JsonColumn;
+  published_at: number | null;
+  registry_updated_at: number | null;
+  seen_at: number;
+  hidden: Generated<BoolColumn>;
+  imported_server_id: string | null;
+  check_result: JsonColumn | null;
+  checked_at: number | null;
+  grade: 'A' | 'B' | 'C' | 'D' | 'F' | null;
+  grade_score: number | null;
+  confidence: Generated<'low' | 'medium' | 'high'>;
+  trust: Generated<'verified' | 'known' | 'unverified' | 'mismatch'>;
+  top_flag: JsonColumn | null;
+  graded_at: number | null;
+  search_text: Generated<string>;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LibrarySyncStateTable {
+  id: string;
+  running: Generated<BoolColumn>;
+  mode: 'full' | 'incremental' | null;
+  pages: Generated<number>;
+  cursor: string | null;
+  checkpoint: number | null;
+  run_started_at: number | null;
+  last_run_at: number | null;
+  last_success_at: number | null;
+  last_full_at: number | null;
+  last_error: string | null;
+  updated_at: number;
+}
+
 export interface MainDB {
   users: UsersTable;
   user_roles: UserRolesTable;
@@ -678,6 +730,8 @@ export interface MainDB {
   leases: LeasesTable;
   coord_signals: CoordSignalsTable;
   jobs: JobsTable;
+  library_entries: LibraryEntriesTable;
+  library_sync_state: LibrarySyncStateTable;
 }
 
 /** Audit database (AUDIT_DATABASE_URL, defaults to DATABASE_URL): audit log, sessions, rollups. */
@@ -732,6 +786,8 @@ export const MAIN_TABLE_COLUMNS = {
   leases: ['name', 'holder', 'expires_at'],
   coord_signals: ['channel', 'payload', 'created_at'],
   jobs: ['id', 'kind', 'status', 'params', 'progress', 'result', 'error', 'created_by', 'created_at', 'finished_at'],
+  library_entries: ['id', 'name', 'version', 'status', 'status_message', 'title', 'description', 'namespace', 'website_url', 'repository_url', 'remotes', 'packages', 'has_remote', 'has_packages', 'has_icons', 'remote_url', 'transport', 'server_json', 'published_at', 'registry_updated_at', 'seen_at', 'hidden', 'imported_server_id', 'check_result', 'checked_at', 'grade', 'grade_score', 'confidence', 'trust', 'top_flag', 'graded_at', 'search_text', 'created_at', 'updated_at'],
+  library_sync_state: ['id', 'running', 'mode', 'pages', 'cursor', 'checkpoint', 'run_started_at', 'last_run_at', 'last_success_at', 'last_full_at', 'last_error', 'updated_at'],
 } as const satisfies { [T in keyof MainDB]: readonly (keyof MainDB[T])[] };
 
 export const AUDIT_TABLE_COLUMNS = {
@@ -754,5 +810,5 @@ void _mainExact;
 void _auditExact;
 
 /** Dialect-specific extras that exist only in one engine (not in the shared inventory). */
-export const SQLITE_ONLY_TABLES = ['tools_fts', 'audit_fts'] as const;
-export const POSTGRES_ONLY_COLUMNS = { tools: ['search_tsv'], audit_log: ['params_tsv'] } as const;
+export const SQLITE_ONLY_TABLES = ['tools_fts', 'audit_fts', 'library_fts'] as const;
+export const POSTGRES_ONLY_COLUMNS = { tools: ['search_tsv'], audit_log: ['params_tsv'], library_entries: ['search_tsv'] } as const;

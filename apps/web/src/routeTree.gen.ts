@@ -34,6 +34,8 @@ import { Route as AppSettingsAppearanceRouteImport } from './routes/_app/setting
 import { Route as AppSettingsProfileRouteImport } from './routes/_app/settings/profile'
 import { Route as AppAdminGroupsIndexRouteImport } from './routes/_app/admin/groups/index'
 import { Route as AppAdminGroupsGroupIdRouteImport } from './routes/_app/admin/groups/$groupId'
+import { Route as AppAdminLibraryIndexRouteImport } from './routes/_app/admin/library/index'
+import { Route as AppAdminLibraryEntryIdRouteImport } from './routes/_app/admin/library/$entryId'
 import { Route as AppAdminServersIndexRouteImport } from './routes/_app/admin/servers/index'
 import { Route as AppAdminServersServerIdRouteImport } from './routes/_app/admin/servers/$serverId'
 import { Route as AppAdminServersNewRouteImport } from './routes/_app/admin/servers/new'
@@ -168,6 +170,16 @@ const AppAdminGroupsGroupIdRoute = AppAdminGroupsGroupIdRouteImport.update({
   path: '/groups/$groupId',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminLibraryIndexRoute = AppAdminLibraryIndexRouteImport.update({
+  id: '/library/',
+  path: '/library/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminLibraryEntryIdRoute = AppAdminLibraryEntryIdRouteImport.update({
+  id: '/library/$entryId',
+  path: '/library/$entryId',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 const AppAdminServersIndexRoute = AppAdminServersIndexRouteImport.update({
   id: '/servers/',
   path: '/servers/',
@@ -240,12 +252,14 @@ export interface FileRoutesByFullPath {
   '/catalog/': typeof AppCatalogIndexRoute
   '/observability/': typeof AppObservabilityIndexRoute
   '/admin/groups/$groupId': typeof AppAdminGroupsGroupIdRoute
+  '/admin/library/$entryId': typeof AppAdminLibraryEntryIdRoute
   '/admin/servers/$serverId': typeof AppAdminServersServerIdRoute
   '/admin/servers/new': typeof AppAdminServersNewRoute
   '/admin/tools/$toolId': typeof AppAdminToolsToolIdRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/observability/sessions/$sessionId': typeof AppObservabilitySessionsSessionIdRoute
   '/admin/groups/': typeof AppAdminGroupsIndexRoute
+  '/admin/library/': typeof AppAdminLibraryIndexRoute
   '/admin/servers/': typeof AppAdminServersIndexRoute
   '/admin/tools/': typeof AppAdminToolsIndexRoute
   '/admin/users/': typeof AppAdminUsersIndexRoute
@@ -275,12 +289,14 @@ export interface FileRoutesByTo {
   '/catalog': typeof AppCatalogIndexRoute
   '/observability': typeof AppObservabilityIndexRoute
   '/admin/groups/$groupId': typeof AppAdminGroupsGroupIdRoute
+  '/admin/library/$entryId': typeof AppAdminLibraryEntryIdRoute
   '/admin/servers/$serverId': typeof AppAdminServersServerIdRoute
   '/admin/servers/new': typeof AppAdminServersNewRoute
   '/admin/tools/$toolId': typeof AppAdminToolsToolIdRoute
   '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/observability/sessions/$sessionId': typeof AppObservabilitySessionsSessionIdRoute
   '/admin/groups': typeof AppAdminGroupsIndexRoute
+  '/admin/library': typeof AppAdminLibraryIndexRoute
   '/admin/servers': typeof AppAdminServersIndexRoute
   '/admin/tools': typeof AppAdminToolsIndexRoute
   '/admin/users': typeof AppAdminUsersIndexRoute
@@ -312,12 +328,14 @@ export interface FileRoutesById {
   '/_app/catalog/': typeof AppCatalogIndexRoute
   '/_app/observability/': typeof AppObservabilityIndexRoute
   '/_app/admin/groups/$groupId': typeof AppAdminGroupsGroupIdRoute
+  '/_app/admin/library/$entryId': typeof AppAdminLibraryEntryIdRoute
   '/_app/admin/servers/$serverId': typeof AppAdminServersServerIdRoute
   '/_app/admin/servers/new': typeof AppAdminServersNewRoute
   '/_app/admin/tools/$toolId': typeof AppAdminToolsToolIdRoute
   '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/_app/observability/sessions/$sessionId': typeof AppObservabilitySessionsSessionIdRoute
   '/_app/admin/groups/': typeof AppAdminGroupsIndexRoute
+  '/_app/admin/library/': typeof AppAdminLibraryIndexRoute
   '/_app/admin/servers/': typeof AppAdminServersIndexRoute
   '/_app/admin/tools/': typeof AppAdminToolsIndexRoute
   '/_app/admin/users/': typeof AppAdminUsersIndexRoute
@@ -349,12 +367,14 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/observability/'
     | '/admin/groups/$groupId'
+    | '/admin/library/$entryId'
     | '/admin/servers/$serverId'
     | '/admin/servers/new'
     | '/admin/tools/$toolId'
     | '/admin/users/$userId'
     | '/observability/sessions/$sessionId'
     | '/admin/groups/'
+    | '/admin/library/'
     | '/admin/servers/'
     | '/admin/tools/'
     | '/admin/users/'
@@ -384,12 +404,14 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/observability'
     | '/admin/groups/$groupId'
+    | '/admin/library/$entryId'
     | '/admin/servers/$serverId'
     | '/admin/servers/new'
     | '/admin/tools/$toolId'
     | '/admin/users/$userId'
     | '/observability/sessions/$sessionId'
     | '/admin/groups'
+    | '/admin/library'
     | '/admin/servers'
     | '/admin/tools'
     | '/admin/users'
@@ -420,12 +442,14 @@ export interface FileRouteTypes {
     | '/_app/catalog/'
     | '/_app/observability/'
     | '/_app/admin/groups/$groupId'
+    | '/_app/admin/library/$entryId'
     | '/_app/admin/servers/$serverId'
     | '/_app/admin/servers/new'
     | '/_app/admin/tools/$toolId'
     | '/_app/admin/users/$userId'
     | '/_app/observability/sessions/$sessionId'
     | '/_app/admin/groups/'
+    | '/_app/admin/library/'
     | '/_app/admin/servers/'
     | '/_app/admin/tools/'
     | '/_app/admin/users/'
@@ -616,6 +640,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminGroupsGroupIdRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/library/': {
+      id: '/_app/admin/library/'
+      path: '/library'
+      fullPath: '/admin/library/'
+      preLoaderRoute: typeof AppAdminLibraryIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/library/$entryId': {
+      id: '/_app/admin/library/$entryId'
+      path: '/library/$entryId'
+      fullPath: '/admin/library/$entryId'
+      preLoaderRoute: typeof AppAdminLibraryEntryIdRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/_app/admin/servers/': {
       id: '/_app/admin/servers/'
       path: '/servers'
@@ -689,11 +727,13 @@ interface AppAdminRouteRouteChildren {
   AppAdminApprovalsRoute: typeof AppAdminApprovalsRoute
   AppAdminSettingsRoute: typeof AppAdminSettingsRoute
   AppAdminGroupsGroupIdRoute: typeof AppAdminGroupsGroupIdRoute
+  AppAdminLibraryEntryIdRoute: typeof AppAdminLibraryEntryIdRoute
   AppAdminServersServerIdRoute: typeof AppAdminServersServerIdRoute
   AppAdminServersNewRoute: typeof AppAdminServersNewRoute
   AppAdminToolsToolIdRoute: typeof AppAdminToolsToolIdRoute
   AppAdminUsersUserIdRoute: typeof AppAdminUsersUserIdRoute
   AppAdminGroupsIndexRoute: typeof AppAdminGroupsIndexRoute
+  AppAdminLibraryIndexRoute: typeof AppAdminLibraryIndexRoute
   AppAdminServersIndexRoute: typeof AppAdminServersIndexRoute
   AppAdminToolsIndexRoute: typeof AppAdminToolsIndexRoute
   AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
@@ -706,11 +746,13 @@ const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
   AppAdminApprovalsRoute: AppAdminApprovalsRoute,
   AppAdminSettingsRoute: AppAdminSettingsRoute,
   AppAdminGroupsGroupIdRoute: AppAdminGroupsGroupIdRoute,
+  AppAdminLibraryEntryIdRoute: AppAdminLibraryEntryIdRoute,
   AppAdminServersServerIdRoute: AppAdminServersServerIdRoute,
   AppAdminServersNewRoute: AppAdminServersNewRoute,
   AppAdminToolsToolIdRoute: AppAdminToolsToolIdRoute,
   AppAdminUsersUserIdRoute: AppAdminUsersUserIdRoute,
   AppAdminGroupsIndexRoute: AppAdminGroupsIndexRoute,
+  AppAdminLibraryIndexRoute: AppAdminLibraryIndexRoute,
   AppAdminServersIndexRoute: AppAdminServersIndexRoute,
   AppAdminToolsIndexRoute: AppAdminToolsIndexRoute,
   AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,

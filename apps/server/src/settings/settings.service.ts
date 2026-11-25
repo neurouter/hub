@@ -38,6 +38,8 @@ export interface SettingValues {
   auditSearchParamKeys: string[];
   /** Drop the `tool` label from /metrics for very large catalogs (§10.4). */
   metricsToolLabel: boolean;
+  /** MCP server library: registry sync is off until an admin enables it (outbound requests). */
+  librarySync: { enabled: boolean; registryUrl: string; githubTokenRef: string | null };
 }
 
 export type SettingKey = keyof SettingValues;
@@ -63,6 +65,7 @@ export const SETTING_DEFAULTS: SettingValues = {
   auditFtsEnabled: true,
   auditSearchParamKeys: ['query', 'q', 'search', 'term', 'name', 'title', 'id', 'path', 'file', 'filename', 'url', 'repo', 'repository', 'owner', 'project', 'branch', 'issue', 'channel', 'table', 'database'],
   metricsToolLabel: true,
+  librarySync: { enabled: false, registryUrl: 'https://registry.modelcontextprotocol.io', githubTokenRef: null },
 };
 
 export const SETTINGS_CHANNEL = 'settings.changed';

@@ -1,5 +1,6 @@
 import type { ContractFixtures } from './handlers';
 import * as D from './demo-data';
+import * as L from './library-data';
 
 /**
  * Contract fixtures backed by the demo dataset: lists honour the common filters (q, serverId,
@@ -88,6 +89,24 @@ export function demoFixtures(): ContractFixtures {
     },
     'servers.putCredentials': { hasSecret: true, secretUpdatedAt: new Date(D.NOW).toISOString() },
     'servers.sync': { jobId: 'job-sync' },
+    'servers.quality': (c: Ctx) => L.demoServerQuality(param(c, 'id')) ?? notFound(),
+    /* MCP server library */
+    'library.status': () => L.LIBRARY_STATUS,
+    'library.updateSettings': async (c: Ctx) => {
+      const b = await body<{ enabled?: boolean; registryUrl?: string; githubToken?: string | null }>(c);
+      return { ...L.LIBRARY_STATUS, ...(b.enabled !== undefined ? { enabled: b.enabled } : {}), ...(b.registryUrl ? { registryUrl: b.registryUrl } : {}), ...(b.githubToken !== undefined ? { hasGithubToken: b.githubToken !== null } : {}) };
+    },
+    'library.sync': { started: true },
+    'library.list': (c: Ctx) => page(L.libraryList(qs(c))),
+    'library.get': (c: Ctx) => L.LIBRARY.find((e) => e.id === param(c, 'id')) ?? notFound(),
+    'library.check': (c: Ctx) => {
+      const e = L.LIBRARY.find((x) => x.id === param(c, 'id'));
+      return e ? { ...e, checkedAt: new Date(D.NOW).toISOString() } : notFound();
+    },
+    'library.update': async (c: Ctx) => {
+      const e = L.LIBRARY.find((x) => x.id === param(c, 'id'));
+      return e ? { ...e, hidden: (await body<{ hidden: boolean }>(c)).hidden } : notFound();
+    },
     'servers.healthCheck': (c: Ctx) => D.SERVERS.find((s) => s.id === param(c, 'id'))?.health ?? notFound(),
     'servers.health': (c: Ctx) => D.healthHistory(param(c, 'id')),
     'servers.syncRuns': () => page([]),

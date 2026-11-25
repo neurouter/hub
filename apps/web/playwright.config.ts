@@ -93,6 +93,9 @@ export default defineConfig({
         AUTH_DEV_LOGIN: 'true',
         SERVE_WEB: 'true',
         EMBEDDINGS_ALLOW_REMOTE: 'false',
+        // the library test syncs from (and checks) the local fake upstream on 127.0.0.1
+        OUTBOUND_ALLOW_PRIVATE_NETWORKS: 'true',
+        OUTBOUND_ALLOW_HTTP_LOOPBACK: 'true',
         OTEL_SDK_DISABLED: 'true',
         LOG_PRETTY: 'false',
         LOG_LEVEL: process.env.E2E_SERVER_LOGS ? 'error' : 'warn',

@@ -47,6 +47,7 @@ import { ToolSyncService } from './catalog/tool-sync.js';
 import { ToolsService } from './catalog/tools.service.js';
 import type { CatalogEvents } from './catalog/events.js';
 import { JobsService } from './jobs/jobs.service.js';
+import { LibraryService } from './library/library.service.js';
 import { createSafeFetch, type FetchLike } from './lib/net/safe-fetch.js';
 import type { NetPolicy } from './lib/net/ssrf-guard.js';
 import { CredentialResolver } from './upstream/credentials.js';
@@ -98,6 +99,12 @@ export interface ServiceInputs {
   otelLogProvider?: () => Promise<LogProviderLike>;
   /** prom-client default process metrics (off in tests to keep registries small). */
   defaultMetrics?: boolean;
+  /** Library registry + GitHub API fetch override (tests). */
+  libraryFetch?: FetchLike;
+  /** Library connection-check fetch override (tests); default is a strict-policy fetch. */
+  libraryProbeFetch?: FetchLike;
+  /** Backoff sleep for registry retries (tests). */
+  librarySleep?: (ms: number) => Promise<void>;
   /** Embedding model override (tests: FakeEmbedder / disabled); default is the worker-thread model from EMBEDDINGS_*. */
   embedder?: Embedder;
 }
@@ -352,6 +359,34 @@ export function createServices(input: ServiceInputs) {
     metrics.auditQueueDepth.set(auditStore.stats().queueDepth);
   };
 
+  let libraryFetch = input.libraryFetch;
+  if (!libraryFetch) {
+    const f = createSafeFetch({ policy: outboundPolicy(config), maxBytes: 4 * 1024 * 1024, timeoutMs: 30_000, maxRedirects: 3 });
+    closers.push(() => f.close());
+    libraryFetch = f;
+  }
+  let libraryProbeFetch = input.libraryProbeFetch;
+  if (!libraryProbeFetch) {
+    const f = createSafeFetch({ policy: outboundPolicy(config), maxBytes: 4 * 1024 * 1024, connectTimeoutMs: 5000, maxRedirects: 3 });
+    closers.push(() => f.close());
+    libraryProbeFetch = f;
+  }
+  const library = new LibraryService({
+    db,
+    dialect: dbs.main.dialect,
+    clock,
+    settings,
+    secrets,
+    audit,
+    coord,
+    fetch: libraryFetch,
+    probeFetch: libraryProbeFetch,
+    probePolicy: outboundPolicy(config),
+    log: logger,
+    version: input.version,
+    ...(input.librarySleep ? { sleep: input.librarySleep } : {}),
+  });
+
   const settingsApi = new SettingsApi(settings, secrets, audit, { otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? null, outboundPolicy: outboundPolicy(config) });
 
   rollups.start();
@@ -367,7 +402,7 @@ export function createServices(input: ServiceInputs) {
     await rollups.stop().catch((err: unknown) => logger.error({ err }, 'rollup flush on shutdown failed'));
     if (otelProvider) await (await otelProvider).shutdown().catch(() => {});
   };
-  return { config, logger, clock, dbs, coord, version: input.version, auditStore, audit, metrics, rollups, redactionRules: redactionRules!, names, auditService, rollupQueries, sessionsService, sinkDispatcher, webhookSink, archive, accessRequests, portalCatalog, nameLookup, connections, settings, keyring, envelope, secrets, sessions, oidcProvider, login, acl, users, groups, agents, jobs, credentials, pool, servers, health, icons, toolSync, tools, catalog, catalogQueries, outboundFetch, events, bus, grants, limiter, rateLimitStore, authenticator, search, embedder, vectorIndex, indexer: indexer!, approvals, approvalStream, approvalHold, oauthClients, oauthTokens, authorization, upstreamOAuth, pipeline, settingsApi, shutdown };
+  return { config, logger, clock, dbs, coord, version: input.version, auditStore, audit, metrics, rollups, redactionRules: redactionRules!, names, auditService, rollupQueries, sessionsService, sinkDispatcher, webhookSink, archive, accessRequests, portalCatalog, nameLookup, connections, settings, keyring, envelope, secrets, sessions, oidcProvider, login, acl, users, groups, agents, jobs, credentials, pool, servers, health, icons, toolSync, tools, catalog, catalogQueries, outboundFetch, events, bus, grants, limiter, rateLimitStore, authenticator, search, embedder, vectorIndex, indexer: indexer!, approvals, approvalStream, approvalHold, oauthClients, oauthTokens, authorization, upstreamOAuth, pipeline, settingsApi, library, shutdown };
 }
 
 export type Services = ReturnType<typeof createServices>;
