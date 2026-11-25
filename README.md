@@ -1,6 +1,6 @@
 # Neurouter
 
-[![Release](https://img.shields.io/github/v/release/neurouter/neurouter)](https://github.com/neurouter/neurouter/releases) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.neurouter%2Fgateway-0d9488)](https://registry.modelcontextprotocol.io/?q=com.neurouter) [![neurouter/neurouter MCP server](https://glama.ai/mcp/servers/neurouter/neurouter/badges/score.svg)](https://glama.ai/mcp/servers/neurouter/neurouter) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/neurouter/neurouter)
+[![Release](https://img.shields.io/github/v/release/neurouter/neurouter)](https://github.com/neurouter/neurouter/releases) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.neurouter%2Fgateway-0d9488)](https://registry.modelcontextprotocol.io/?q=com.neurouter) [![neurouter/neurouter MCP server](https://glama.ai/mcp/servers/neurouter/neurouter/badges/score.svg)](https://glama.ai/mcp/servers/neurouter/neurouter) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/neurouter/neurouter) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/17086/badge)](https://www.bestpractices.dev/projects/17086)
 
 Self-hosted **enterprise MCP gateway**. Agents connect to one `/mcp` endpoint and reach only the
 upstream MCP servers and tools they've been granted; every call is authenticated, authorized,
