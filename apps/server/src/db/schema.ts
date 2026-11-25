@@ -145,6 +145,7 @@ export interface ServersTable {
   timeout_ms: Generated<number>;
   sync_interval_min: number | null;
   auto_approve_new_tools: Generated<BoolColumn>;
+  pinning_mode: Generated<'strict' | 'monitor'>;
   oauth_config: JsonColumn | null;
   rate_limit: JsonColumn | null;
   detected_era: 'modern' | 'legacy' | 'legacy_sse' | null;
@@ -703,7 +704,7 @@ export const MAIN_TABLE_COLUMNS = {
   api_keys: ['id', 'agent_id', 'name', 'key_id', 'secret_hash', 'display_prefix', 'expires_at', 'last_used_at', 'last_used_ip', 'revoked_at', 'created_by', 'created_at'],
   web_sessions: ['id_hash', 'user_id', 'csrf_token', 'created_at', 'expires_at', 'last_seen_at', 'ip', 'user_agent', 'id_token_hint'],
   oidc_login_states: ['state_hash', 'code_verifier_enc', 'nonce', 'return_to', 'expires_at'],
-  servers: ['id', 'slug', 'name', 'owner_user_id', 'description', 'url', 'transport', 'auth_mode', 'trusted', 'enabled', 'tags', 'icon_url', 'timeout_ms', 'sync_interval_min', 'auto_approve_new_tools', 'oauth_config', 'rate_limit', 'detected_era', 'protocol_version', 'server_info', 'capabilities', 'status', 'last_synced_at', 'created_by', 'created_at', 'updated_at'],
+  servers: ['id', 'slug', 'name', 'owner_user_id', 'description', 'url', 'transport', 'auth_mode', 'trusted', 'enabled', 'tags', 'icon_url', 'timeout_ms', 'sync_interval_min', 'auto_approve_new_tools', 'pinning_mode', 'oauth_config', 'rate_limit', 'detected_era', 'protocol_version', 'server_info', 'capabilities', 'status', 'last_synced_at', 'created_by', 'created_at', 'updated_at'],
   server_icons: ['server_id', 'source_url', 'content_type', 'bytes', 'etag', 'fetched_at', 'error'],
   encryption_keys: ['id', 'kek_id', 'wrapped_key', 'status', 'created_at'],
   secrets: ['id', 'purpose', 'provider', 'external_ref', 'dek_id', 'nonce', 'ciphertext', 'version', 'created_at', 'updated_at'],

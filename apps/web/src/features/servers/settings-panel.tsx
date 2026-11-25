@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, can, IconSourceUrl, type ServerDetail, type UpdateServerBody } from '@neurouter/shared';
+import { api, can, IconSourceUrl, type PinningMode, type ServerDetail, type UpdateServerBody } from '@neurouter/shared';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +18,7 @@ import { apiFetch } from '@/lib/api-client';
 import { notifyError, notifySuccess } from '@/lib/notify';
 import { serverKeys } from './queries';
 
-/** Settings tab: basics, enable/disable, trusted (admin), sync interval, delete (typed confirmation, admin). */
+/** Settings tab: basics, enable/disable, trusted (admin), pinning mode (admin), sync interval, delete (typed confirmation, admin). */
 export function ServerSettingsPanel({ server }: { server: ServerDetail }) {
   const me = useMe();
   const qc = useQueryClient();
@@ -146,9 +148,42 @@ export function ServerSettingsPanel({ server }: { server: ServerDetail }) {
             <Switch className="mt-0.5" checked={server.trusted} disabled={!isAdmin} onCheckedChange={(v) => update.mutate({ trusted: v })} />
             <span className="flex flex-col">
               <span className="font-medium">Trusted annotations</span>
-              <span className="text-[13px] text-muted-foreground">Admin only. Lets tool hints like readOnlyHint influence policy.</span>
+              <span className="text-[13px] text-muted-foreground">
+                Admin only. Shows this server's tool hints (readOnlyHint, destructiveHint…) as trusted in the console. Access decisions never depend on annotations.
+              </span>
             </span>
           </label>
+        </div>
+      </Section>
+      <Section title="Definition pinning">
+        <div className="flex flex-col gap-3">
+          <p className="text-[13px] text-muted-foreground">
+            Every tool definition is hashed and kept as a version. This decides what happens when the server changes one. Admin only.
+          </p>
+          <RadioGroup
+            value={server.pinningMode}
+            onValueChange={(v) => update.mutate({ pinningMode: v as PinningMode })}
+            disabled={!isAdmin || update.isPending}
+            aria-label="Definition pinning"
+            className="gap-3"
+          >
+            <div className="flex items-start gap-3">
+              <RadioGroupItem value="strict" id="pinning-strict" className="mt-0.5" />
+              <Label htmlFor="pinning-strict" className="flex flex-col items-start gap-0.5 font-normal">
+                <span className="font-medium">Strict (recommended for third-party servers)</span>
+                <span className="text-[13px] text-muted-foreground">New and changed definitions are blocked until an owner reviews the diff and approves it.</span>
+              </Label>
+            </div>
+            <div className="flex items-start gap-3">
+              <RadioGroupItem value="monitor" id="pinning-monitor" className="mt-0.5" />
+              <Label htmlFor="pinning-monitor" className="flex flex-col items-start gap-0.5 font-normal">
+                <span className="font-medium">Monitor (for servers you build and review yourselves)</span>
+                <span className="text-[13px] text-muted-foreground">
+                  Changes apply on the next sync without review. Each one is kept as a version, audited and marked “Applied automatically” on the tool.
+                </span>
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
       </Section>
       {isAdmin ? (

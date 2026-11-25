@@ -136,6 +136,72 @@ describe('catalog REST', () => {
     expect((await ctx.as(owner, { method: 'GET', url: '/api/tools?status=pending_review' })).json().items).toHaveLength(1);
   });
 
+  it('monitor mode applies changes at once, keeps them as versions and audits them; only admins set it', async () => {
+    const s = await createServer();
+    const tool = (await ctx.as(owner, { method: 'GET', url: '/api/tools' })).json().items[0];
+    const diff = (await ctx.as(owner, { method: 'GET', url: `/api/tools/${tool.id}/definition-diff` })).json();
+    await ctx.as(owner, { method: 'POST', url: `/api/tools/${tool.id}/approve-definition`, payload: { hash: diff.current.hash } });
+    // strict (default): a change is held for review
+    up('http://upstream.test').tools[0]!.description = 'Echo, now with telemetry';
+    await ctx.as(owner, { method: 'POST', url: `/api/servers/${s.id}/sync` });
+    await ctx.s.jobs.idle();
+    expect((await ctx.as(owner, { method: 'GET', url: `/api/tools/${tool.id}` })).json()).toMatchObject({ reviewState: 'pending_review', description: 'Echo the input text' });
+
+    // owners can't relax pinning; admins can
+    expect((await ctx.as(owner, { method: 'PATCH', url: `/api/servers/${s.id}`, payload: { pinningMode: 'monitor' } })).statusCode).toBe(403);
+    const patched = await ctx.as(admin, { method: 'PATCH', url: `/api/servers/${s.id}`, payload: { pinningMode: 'monitor' } });
+    expect(patched.statusCode, patched.body).toBe(200);
+    expect(patched.json().pinningMode).toBe('monitor');
+
+    // the next sync applies the change that was waiting, and later changes apply at once
+    await ctx.as(owner, { method: 'POST', url: `/api/servers/${s.id}/sync` });
+    await ctx.s.jobs.idle();
+    expect((await ctx.as(owner, { method: 'GET', url: `/api/tools/${tool.id}` })).json()).toMatchObject({ reviewState: 'approved', enabled: true, hasPendingChange: false, description: 'Echo, now with telemetry' });
+    up('http://upstream.test').tools[0]!.description = 'Echo v3';
+    const sync = (await ctx.as(owner, { method: 'POST', url: `/api/servers/${s.id}/sync` })).json();
+    await ctx.s.jobs.idle();
+    expect((await ctx.as(owner, { method: 'GET', url: `/api/jobs/${sync.jobId}` })).json().result).toMatchObject({ changed: 1 });
+    const t3 = (await ctx.as(owner, { method: 'GET', url: `/api/tools/${tool.id}` })).json();
+    expect(t3).toMatchObject({ reviewState: 'approved', enabled: true, description: 'Echo v3' });
+
+    // every applied definition is a version; automatic ones have no decider
+    const versions = (await ctx.as(auditor, { method: 'GET', url: `/api/tools/${tool.id}/versions` })).json().items as { decision: string; decidedBy: unknown }[];
+    expect(versions.filter((v) => v.decision === 'approved')).toEqual([expect.objectContaining({ decidedBy: null })]);
+    expect(versions.filter((v) => v.decision === 'superseded')).toHaveLength(2);
+
+    await ctx.s.auditStore.flush();
+    const now = Date.now();
+    const range = `from=${encodeURIComponent(new Date(now - 3_600_000).toISOString())}&to=${encodeURIComponent(new Date(now + 3_600_000).toISOString())}`;
+    const events = (await ctx.as(auditor, { method: 'GET', url: `/api/audit/events?${range}&kind=system&limit=100` })).json().items as { adminAction: string | null }[];
+    expect(events.filter((e) => e.adminAction === 'tool.definition_auto_applied')).toHaveLength(2);
+
+    // new tools go live in monitor mode too
+    up('http://upstream.test').tools.push({ name: 'second', description: 'Second tool', inputSchema: { type: 'object' } });
+    await ctx.as(owner, { method: 'POST', url: `/api/servers/${s.id}/sync` });
+    await ctx.s.jobs.idle();
+    const second = (await ctx.as(owner, { method: 'GET', url: '/api/tools' })).json().items.find((t: { name: string }) => t.name === 'second');
+    expect(second).toMatchObject({ reviewState: 'approved', enabled: true });
+  });
+
+  it('bulk approve: each item is a CAS on the reviewed hash; failures are reported, not thrown', async () => {
+    up('http://upstream.test').tools.push({ name: 'two', description: 'Second', inputSchema: { type: 'object' } }, { name: 'three', description: 'Third', inputSchema: { type: 'object' } });
+    await createServer();
+    const tools = (await ctx.as(owner, { method: 'GET', url: '/api/tools?status=pending_review' })).json().items as { id: string; name: string }[];
+    expect(tools).toHaveLength(3);
+    const hashes = await Promise.all(tools.map(async (t) => (await ctx.as(owner, { method: 'GET', url: `/api/tools/${t.id}/definition-diff` })).json().current.hash as string));
+    const items = tools.map((t, i) => ({ id: t.id, hash: i === 2 ? 'stale' : hashes[i]! }));
+
+    // someone without rights on the server approves nothing
+    const denied = (await ctx.as(alice, { method: 'POST', url: '/api/tools/approve-definitions', payload: { items } })).json();
+    expect(denied.approved).toEqual([]);
+    expect(denied.failed).toHaveLength(3);
+
+    const res = await ctx.as(owner, { method: 'POST', url: '/api/tools/approve-definitions', payload: { items } });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json()).toEqual({ approved: [tools[0]!.id, tools[1]!.id], failed: [{ id: tools[2]!.id, reason: expect.stringContaining('changed since you reviewed') }] });
+    expect((await ctx.as(owner, { method: 'GET', url: '/api/tools?status=pending_review' })).json().items.map((t: { id: string }) => t.id)).toEqual([tools[2]!.id]);
+  });
+
   it('owner vs admin field rules, slug immutability, scoping and guards', async () => {
     const s = await createServer();
     expect((await ctx.as(owner, { method: 'PATCH', url: `/api/servers/${s.id}`, payload: { name: 'GH', timeoutMs: 30000 } })).json()).toMatchObject({ name: 'GH', timeoutMs: 30000 });

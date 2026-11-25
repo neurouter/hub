@@ -22,6 +22,7 @@ import { serverHealthQuery, serverQuery } from '@/features/servers/queries';
 import { ServerSettingsPanel } from '@/features/servers/settings-panel';
 import { SyncHistory } from '@/features/servers/sync-history';
 import { useHealthCheck, useServerSync } from '@/features/servers/use-sync';
+import { BulkReviewDialog } from '@/features/tools/bulk-review-dialog';
 import { ToolsTable } from '@/features/tools/tools-table';
 import { useMe } from '@/hooks/use-me';
 import { useTimeRange } from '@/hooks/use-time-range';
@@ -87,6 +88,7 @@ function ServerDetailPage() {
   const r24 = useTimeRange({ range: '24h' });
   const spark = useQuery({ ...serverHealthQuery(serverId, r24.from, r24.to), enabled: tab === 'overview' });
   const canWrite = can(me, 'servers:write', { serverId });
+  const [reviewing, setReviewing] = useState(false);
   const toolFilter = useMemo(() => ({ serverId: [serverId] }), [serverId]);
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const s = q.data;
@@ -144,7 +146,18 @@ function ServerDetailPage() {
             <SyncHistory serverId={s.id} />
           </Section>
         </TabsContent>
-        <TabsContent value="tools" className="pt-3">
+        <TabsContent value="tools" className="flex flex-col gap-3 pt-3">
+          {s.pendingReviewCount && canWrite ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning-muted px-4 py-2.5">
+              <span className="text-[13.5px]">
+                {s.pendingReviewCount} {s.pendingReviewCount === 1 ? 'definition is' : 'definitions are'} waiting for review. Those tools are blocked until approved.
+              </span>
+              <Button size="sm" onClick={() => setReviewing(true)}>
+                Review all…
+              </Button>
+            </div>
+          ) : null}
+          <BulkReviewDialog serverId={s.id} open={reviewing} onOpenChange={setReviewing} />
           <ToolsTable filter={toolFilter} hideServer empty={<EmptyState title="No tools yet" description="Tools appear after the first sync. They stay disabled until reviewed." />} />
         </TabsContent>
         <TabsContent value="auth" className="pt-3">

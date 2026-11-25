@@ -186,6 +186,32 @@ export class ToolsService {
 
   /** CAS on `pending_hash = :hash` → pin it, apply the definition, status active (409 when stale). */
   async approve(id: string, hash: string, viewer: UserSubject): Promise<ToolDetail> {
+    await this.pin(id, hash, viewer);
+    await this.events.toolsChanged();
+    return this.get(id, viewer);
+  }
+
+  /**
+   * Bulk review (e.g. every change from one sync of a server): each item is the same CAS as
+   * `approve`, so a definition that changed again since the reviewer saw it is not approved.
+   */
+  async approveMany(items: { id: string; hash: string }[], viewer: UserSubject): Promise<{ approved: string[]; failed: { id: string; reason: string }[] }> {
+    const approved: string[] = [];
+    const failed: { id: string; reason: string }[] = [];
+    for (const it of items) {
+      try {
+        await this.pin(it.id, it.hash, viewer);
+        approved.push(it.id);
+      } catch (err) {
+        if (!(err instanceof AppError)) throw err;
+        failed.push({ id: it.id, reason: err.message });
+      }
+    }
+    if (approved.length) await this.events.toolsChanged();
+    return { approved, failed };
+  }
+
+  private async pin(id: string, hash: string, viewer: UserSubject): Promise<void> {
     const t = await this.load(id, viewer);
     this.assertWrite(t, viewer);
     if (!t.pending_hash || t.pending_hash !== hash || !t.pending_definition) throw AppError.conflict('The definition changed since you reviewed it; reload and review again');
@@ -214,8 +240,6 @@ export class ToolsService {
     });
     if (!ok) throw AppError.conflict('The definition changed since you reviewed it; reload and review again');
     this.audit.admin({ actorUserId: viewer.id, action: 'tool.definition.approve', targetType: 'tool', targetId: id, before: { pinnedHash: t.pinned_hash }, after: { pinnedHash: hash } });
-    await this.events.toolsChanged();
-    return this.get(id, viewer);
   }
 
   /** The tool stays blocked; `reviewState` is `rejected` until a new definition appears. */

@@ -128,6 +128,7 @@ export function demoFixtures(): ContractFixtures {
       return { pinned: { ...snap, pinnedAt: d.pinnedAt!, pinnedBy: d.pinnedBy! }, current: { ...snap, detectedAt: d.pinnedAt! } };
     },
     'tools.approveDefinition': (c: Ctx) => ({ ...D.toolDetail(param(c, 'id'))!, reviewState: 'approved', hasPendingChange: false }),
+    'tools.approveDefinitions': async (c: Ctx) => ({ approved: (await body<{ items: { id: string }[] }>(c)).items.map((i) => i.id), failed: [] }),
     'tools.rejectDefinition': (c: Ctx) => ({ ...D.toolDetail(param(c, 'id'))!, reviewState: 'rejected', hasPendingChange: false }),
     'tools.versions': () => page([]),
 

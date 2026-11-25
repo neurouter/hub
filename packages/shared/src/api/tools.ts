@@ -99,6 +99,15 @@ export type BulkToolsResponse = z.infer<typeof BulkToolsResponse>;
 
 export const ApproveDefinitionBody = z.object({ hash: z.string().min(1).max(128) });
 export type ApproveDefinitionBody = z.infer<typeof ApproveDefinitionBody>;
+/** Approve several pending definitions at once; each item is still a CAS on the reviewed hash. */
+export const ApproveDefinitionsBody = z.object({ items: z.array(z.object({ id: Id, hash: z.string().min(1).max(128) })).min(1).max(200) });
+export type ApproveDefinitionsBody = z.infer<typeof ApproveDefinitionsBody>;
+export const ApproveDefinitionsResponse = z.object({
+  approved: z.array(Id),
+  /** stale hash (changed again since review), no pending definition, or no permission */
+  failed: z.array(z.object({ id: Id, reason: z.string() })),
+});
+export type ApproveDefinitionsResponse = z.infer<typeof ApproveDefinitionsResponse>;
 export const RejectDefinitionBody = z.object({ note: z.string().max(1000).optional() });
 export type RejectDefinitionBody = z.infer<typeof RejectDefinitionBody>;
 
@@ -126,6 +135,10 @@ export const toolEndpoints = {
   approveDefinition: endpoint({
     method: 'POST', path: '/api/tools/:id/approve-definition', kind: 'json', access: ['owner'],
     summary: 'Approve (pin) the reviewed definition hash (409 when stale)', params: IdParams, body: ApproveDefinitionBody, response: ToolDetail,
+  }),
+  approveDefinitions: endpoint({
+    method: 'POST', path: '/api/tools/approve-definitions', kind: 'json', access: ['owner'],
+    summary: 'Approve several reviewed definition hashes (per-item CAS)', body: ApproveDefinitionsBody, response: ApproveDefinitionsResponse,
   }),
   rejectDefinition: endpoint({
     method: 'POST', path: '/api/tools/:id/reject-definition', kind: 'json', access: ['owner'],

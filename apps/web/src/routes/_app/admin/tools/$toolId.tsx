@@ -16,6 +16,7 @@ import { PolicyPanel } from '@/features/tools/policy-panel';
 import { definitionDiffQuery, toolQuery } from '@/features/tools/queries';
 import { ReviewPanel } from '@/features/tools/review-panel';
 import { useMe } from '@/hooks/use-me';
+import { formatRelative } from '@/lib/format';
 
 const TABS = ['definition', 'review', 'policy'] as const;
 type Tab = (typeof TABS)[number];
@@ -67,6 +68,11 @@ function ToolDetailPage() {
       <div className="-mt-3 flex flex-wrap gap-2">
         <ReviewStateBadge state={t.reviewState} />
         <EffectiveStatePill tool={t} />
+        {t.reviewState === 'approved' && t.pinnedHash && !t.pinnedBy ? (
+          <Pill tone="info" title="This definition was approved without review: the server is in monitor pinning mode, or it auto-approves new tools. The version history on the Definition tab lists every version.">
+            Applied automatically{t.pinnedAt ? ` · ${formatRelative(t.pinnedAt)}` : ''}
+          </Pill>
+        ) : null}
         {t.requiresApproval ? <Pill tone="warn">Requires approval</Pill> : null}
       </div>
       <Tabs value={active} onValueChange={(v) => void navigate({ search: { tab: v as Tab }, replace: true })}>

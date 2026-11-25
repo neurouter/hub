@@ -50,6 +50,7 @@ export const ROUTE_AUDIT: Record<string, RouteAudit> = {
   'tools.update': a('tool.update'),
   'tools.bulk': a('tool.bulk_update'),
   'tools.approveDefinition': a('tool.definition.approve'),
+  'tools.approveDefinitions': a('tool.definition.approve'),
   'tools.rejectDefinition': a('tool.definition.reject'),
   'grants.create': a('grant.create'),
   'grants.delete': a('grant.delete'),

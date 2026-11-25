@@ -173,6 +173,8 @@ export function serverDetail(id: string): ServerDetail | undefined {
     timeoutMs: 30_000,
     syncIntervalMin: 60,
     autoApproveNewTools: false,
+    // the in-house warehouse wrapper is reviewed in its own repo; third-party servers stay strict
+    pinningMode: seed.key === 'postgres' ? 'monitor' : 'strict',
     rateLimit: null,
     detectedEra: row.transport === 'sse' ? 'legacy_sse' : 'modern',
     protocolVersion: row.transport === 'sse' ? '2024-11-05' : '2025-11-25',

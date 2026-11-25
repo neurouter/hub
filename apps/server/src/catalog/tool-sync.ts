@@ -44,9 +44,12 @@ function columnsOf(def: ToolDefinition) {
 }
 
 /**
- * Tool sync with definition pinning (backend §6): new tools → pending_review (or active with
- * auto-approve), a changed hash → `changed` (blocks calls until re-approved; auto-approve never
- * applies to changes), missing upstream → `removed`. The gateway always serves the pinned definition.
+ * Tool sync with definition pinning (backend §6). In `strict` mode (default): new tools →
+ * pending_review (or active with auto-approve), a changed hash → `changed` (blocks calls until
+ * re-approved). In `monitor` mode every new or changed definition is applied at once, recorded as
+ * an automatically approved version and audited as `tool.definition_auto_applied`. A server's
+ * auto-approve-new-tools switch never applies to changes. Missing upstream → `removed`. The gateway
+ * always serves the pinned definition.
  */
 export class ToolSyncService {
   constructor(
@@ -93,8 +96,11 @@ export class ToolSyncService {
 
     const result: SyncResult = { runId, added: 0, changed: 0, removed: 0, unchanged: 0, skipped: [] };
     const now = this.clock.now();
-    const autoApprove = toBool(server.auto_approve_new_tools);
+    // monitor mode trusts the server's own change process: new tools go live and changes apply
+    const monitor = server.pinning_mode === 'monitor';
+    const autoApprove = monitor || toBool(server.auto_approve_new_tools);
     const changedTools: { id: string; name: string }[] = [];
+    const autoApplied: { id: string; name: string; from: string | null; to: string }[] = [];
     await this.db.transaction().execute(async (trx) => {
       const existing = await trx.selectFrom('tools').selectAll().where('server_id', '=', serverId).execute();
       const byName = new Map(existing.map((t) => [t.upstream_name, t]));
@@ -161,6 +167,37 @@ export class ToolSyncService {
             await trx.updateTable('tools').set(base).where('id', '=', cur.id).execute();
           }
           result.unchanged++;
+        } else if (monitor) {
+          // apply the new definition now; keep it as an (automatically) approved version and flag it
+          await trx.updateTable('tool_versions').set({ decision: 'superseded' }).where('tool_id', '=', cur.id).where('decision', '=', 'approved').execute();
+          await trx.updateTable('tool_versions').set({ decision: 'superseded' }).where('tool_id', '=', cur.id).where('decision', '=', 'pending').where('hash', '!=', hash).execute();
+          // a definition that was already waiting for review (e.g. from strict mode) is promoted, not duplicated
+          const promoted = await trx
+            .updateTable('tool_versions')
+            .set({ decision: 'approved', decided_by: null, decided_at: now })
+            .where('tool_id', '=', cur.id)
+            .where('hash', '=', hash)
+            .where('decision', 'in', ['pending', 'rejected'])
+            .executeTakeFirst();
+          if (!Number(promoted.numUpdatedRows)) {
+            await trx.insertInto('tool_versions').values({ id: newId(), tool_id: cur.id, hash, definition: toJsonColumn(def), first_seen_at: now, decision: 'approved', decided_by: null, decided_at: now }).execute();
+          }
+          await updateIndexedTool(trx, this.dialect, cur, {
+            ...base,
+            ...columnsOf(def),
+            status: 'active' as const,
+            pinned_hash: hash,
+            pending_hash: null,
+            pending_definition: null,
+            approved_by: null,
+            approved_at: now,
+            ...(cur.pinned_hash === null ? { enabled: 1 as const } : {}),
+          });
+          if (cur.pinned_hash === null) result.added++;
+          else {
+            autoApplied.push({ id: cur.id, name: cur.exposed_name, from: cur.pinned_hash, to: hash });
+            result.changed++;
+          }
         } else if (cur.pending_hash === hash) {
           // the same unreviewed definition again
           const status = cur.status === 'removed' ? (cur.pinned_hash ? 'changed' : 'pending_review') : cur.status;
@@ -191,6 +228,7 @@ export class ToolSyncService {
     });
     await finish('ok', result, result.skipped.length ? `skipped: ${result.skipped.map((s) => `${s.name} (${s.reason})`).join('; ')}`.slice(0, 1000) : null);
     for (const t of changedTools) this.audit.system('tool.definition_changed', { targetType: 'tool', targetId: t.id, reason: t.name });
+    for (const t of autoApplied) this.audit.system('tool.definition_auto_applied', { targetType: 'tool', targetId: t.id, reason: `${t.name} (pinning mode: monitor)`, changes: { pinnedHash: { before: t.from, after: t.to } } });
     if (result.added || result.changed || result.removed) await this.onChanged();
     return result;
   }

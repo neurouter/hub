@@ -196,6 +196,7 @@ export class ServersService {
       timeoutMs: s.timeout_ms,
       syncIntervalMin: s.sync_interval_min,
       autoApproveNewTools: toBool(s.auto_approve_new_tools),
+      pinningMode: s.pinning_mode,
       rateLimit: rl ? { perToolPerMinute: rl.perToolPerMinute ?? null } : null,
       detectedEra: s.detected_era,
       protocolVersion: s.protocol_version,
@@ -289,6 +290,7 @@ export class ServersService {
           timeout_ms: body.timeoutMs ?? 60_000,
           sync_interval_min: body.syncIntervalMin ?? null,
           auto_approve_new_tools: fromBool(body.autoApproveNewTools ?? false),
+          pinning_mode: body.pinningMode ?? 'strict',
           oauth_config: null,
           rate_limit: null,
           detected_era: null,
@@ -344,6 +346,7 @@ export class ServersService {
     if (body.syncIntervalMin !== undefined) patch.sync_interval_min = body.syncIntervalMin;
     if (body.rateLimit !== undefined) patch.rate_limit = body.rateLimit ? toJsonColumn(body.rateLimit) : null;
     if (body.autoApproveNewTools !== undefined) patch.auto_approve_new_tools = fromBool(body.autoApproveNewTools);
+    if (body.pinningMode !== undefined) patch.pinning_mode = body.pinningMode;
     if (body.url !== undefined) patch.url = body.url;
     if (body.transport !== undefined) patch.transport = body.transport;
     if (body.trusted !== undefined) patch.trusted = fromBool(body.trusted);

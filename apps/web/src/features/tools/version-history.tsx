@@ -35,7 +35,15 @@ export function VersionHistory({ toolId, pinnedHash }: { toolId: string; pinnedH
     },
     { id: 'seen', header: 'First seen', priority: 2, cell: (v) => <span className="tabular-nums text-muted-foreground">{formatDateTime(v.firstSeenAt)}</span> },
     { id: 'decision', header: 'Decision', priority: 1, cell: (v) => <Pill tone={DECISION[v.decision].tone}>{DECISION[v.decision].label}</Pill> },
-    { id: 'by', header: 'Decided', cell: (v) => <span className="text-muted-foreground">{v.decidedAt ? `${formatDateTime(v.decidedAt)}${v.decidedBy ? ` · ${v.decidedBy.name}` : ''}` : DASH}</span> },
+    {
+      id: 'by',
+      header: 'Decided',
+      cell: (v) => (
+        <span className="text-muted-foreground">
+          {v.decidedAt ? `${formatDateTime(v.decidedAt)} · ${v.decidedBy ? v.decidedBy.name : 'automatically (no review)'}` : DASH}
+        </span>
+      ),
+    },
   ];
   return (
     <div className="flex flex-col gap-2">

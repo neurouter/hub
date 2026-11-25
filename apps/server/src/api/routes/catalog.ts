@@ -85,6 +85,7 @@ export async function catalogRoutes(app: FastifyInstance, s: Services): Promise<
   registerEndpoint(app, api.tools.bulk, async (req) => s.tools.bulk(req.body, requireUser(req)));
   registerEndpoint(app, api.tools.definitionDiff, async (req) => s.tools.diff(req.params.id, requireUser(req)));
   registerEndpoint(app, api.tools.approveDefinition, async (req) => s.tools.approve(req.params.id, req.body.hash, requireUser(req)));
+  registerEndpoint(app, api.tools.approveDefinitions, async (req) => s.tools.approveMany(req.body.items, requireUser(req)));
   registerEndpoint(app, api.tools.rejectDefinition, async (req) => s.tools.reject(req.params.id, req.body.note, requireUser(req)));
   registerEndpoint(app, api.tools.versions, async (req) => s.tools.versions(req.params.id, req.query, requireUser(req)));
 

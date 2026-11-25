@@ -6,6 +6,15 @@ import * as z from 'zod';
  */
 
 export const ServerTransport = z.enum(['streamable_http', 'sse']);
+
+/**
+ * How a server's tool definitions are pinned (catalog/tool-sync.ts):
+ * - `strict`: new and changed definitions are blocked until an owner approves them (default).
+ * - `monitor`: changes apply at once; each one is kept as a version, audited and flagged for review
+ *   afterwards. For first-party servers whose changes already go through your own code review.
+ */
+export const PinningMode = z.enum(['strict', 'monitor']);
+export type PinningMode = z.infer<typeof PinningMode>;
 export type ServerTransport = z.infer<typeof ServerTransport>;
 
 /** DB-level auth mode (`servers.auth_mode`). */

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { HealthStatus, OAuthClientIdMode, ServerAuthType, ServerEra, ServerStatus, ServerTransport, SyncRunStatus, SyncTrigger } from '../domain/enums.js';
+import { HealthStatus, OAuthClientIdMode, PinningMode, ServerAuthType, ServerEra, ServerStatus, ServerTransport, SyncRunStatus, SyncTrigger } from '../domain/enums.js';
 import { SLUG_REGEX } from '../mcp/naming.js';
 import { Actions, CursorQuery, Id, IdParams, IsoDateTime, IsoDateTimeInput, JobAccepted, Page, Ref, queryOptional, sortParam } from './common.js';
 import { endpoint } from './endpoint.js';
@@ -89,6 +89,7 @@ export const ServerDetail = ServerRow.extend({
   timeoutMs: z.number().int().positive(),
   syncIntervalMin: z.number().int().positive().nullable(),
   autoApproveNewTools: z.boolean(),
+  pinningMode: PinningMode,
   rateLimit: ServerRateLimit.nullable(),
   detectedEra: ServerEra.nullable(),
   protocolVersion: z.string().nullable(),
@@ -130,6 +131,7 @@ export const CreateServerBody = z.object({
   timeoutMs: TimeoutMs.optional(),
   syncIntervalMin: SyncIntervalMin.optional(),
   autoApproveNewTools: z.boolean().optional(),
+  pinningMode: PinningMode.default('strict'),
 });
 export type CreateServerBody = z.input<typeof CreateServerBody>;
 
@@ -148,6 +150,7 @@ export const UpdateServerBody = z.object({
   rateLimit: ServerRateLimit.nullable().optional(),
   autoApproveNewTools: z.boolean().optional(),
   // admin-only
+  pinningMode: PinningMode.optional(),
   url: z.url().optional(),
   transport: ServerTransport.optional(),
   trusted: z.boolean().optional(),
