@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import type {
   AccessRequest, Agent, AgentScope, ApiKey, AuditEvent, AuditEventFull, Breakdown, CatalogServer, CatalogServerDetail, CatalogServerTool,
   Approval, ClaimMapping, Connection, ConsentRequest, DefinitionDiff, Grant, GroupDetail, GroupMember, GroupRow, HealthHistory, MetricsSummary,
@@ -328,6 +329,7 @@ export function userDetail(id: string): UserDetail | undefined {
 }
 
 export const GROUP_ROWS: GroupRow[] = [
+  { id: EVERYONE_GROUP_ID, name: 'Everyone', description: 'Every user in the organization. Grant a server to this group to make it available to everyone.', source: 'local', memberCount: 257, mappingCount: 0, grantCount: 0, builtin: true },
   { ...GROUPS.engineering, description: 'All engineers (synced from Okta).', source: 'oidc', memberCount: 214, mappingCount: 1, grantCount: 6 },
   { ...GROUPS.contractors, description: 'External contractors.', source: 'oidc', memberCount: 31, mappingCount: 1, grantCount: 3 },
   { ...GROUPS.sre, description: 'Site reliability on-call rotation.', source: 'local', memberCount: 12, mappingCount: 0, grantCount: 2 },
@@ -335,7 +337,7 @@ export const GROUP_ROWS: GroupRow[] = [
 
 export function groupDetail(id: string): GroupDetail | undefined {
   const g = GROUP_ROWS.find((x) => x.id === id);
-  return g ? { ...g, createdAt: ago(300 * DAY), updatedAt: ago(9 * DAY), actions: ['update', 'delete'] } : undefined;
+  return g ? { ...g, createdAt: ago(300 * DAY), updatedAt: ago(9 * DAY), actions: g.builtin ? [] : ['update', 'delete'] } : undefined;
 }
 
 export function groupMembers(id: string): GroupMember[] {

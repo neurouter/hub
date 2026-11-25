@@ -1,5 +1,5 @@
 import { sql, type Kysely, type SqlBool } from 'kysely';
-import { can, isAdmin, isAuditor, type BatchGrantsBody, type CreateGrantBody, type EffectiveAccess, type EffectiveAccessQuery, type Grant, type ListGrantsQuery, type ProblemFieldError } from '@neurouter/shared';
+import { EVERYONE_GROUP_ID, can, isAdmin, isAuditor, type BatchGrantsBody, type CreateGrantBody, type EffectiveAccess, type EffectiveAccessQuery, type Grant, type ListGrantsQuery, type ProblemFieldError } from '@neurouter/shared';
 import type { AuditRecorder } from '../audit/recorder.js';
 import type { MainDB } from '../db/schema.js';
 import type { Clock } from '../lib/clock.js';
@@ -15,6 +15,7 @@ import type { AclGrant } from './acl.js';
 type GrantDb = { id: string; subject_type: 'user' | 'group' | 'agent'; subject_id: string; target_type: 'server' | 'tool'; target_id: string; effect: 'allow' | 'deny'; expires_at: number | null; source: 'manual' | 'access_request'; access_request_id: string | null; created_by: string; created_at: number };
 
 const globalReader = (v: UserSubject) => isAdmin(v) || isAuditor(v);
+const isEveryone = (r: { subject_type: string; subject_id: string }) => r.subject_type === 'group' && r.subject_id === EVERYONE_GROUP_ID;
 
 /** Grants (backend §5.3, §14.3): owners manage grants on their servers; deny wins at evaluation. */
 export class GrantsService {
@@ -105,6 +106,7 @@ export class GrantsService {
       return { path: [...path, 'target', 'id'], message: 'Target not found', code: 'not_found' };
     }
     if (!can(viewer, 'grants:write', { serverId })) return { path: [...path, 'target'], message: 'You do not manage this server', code: 'forbidden' };
+    if (body.subject.type === 'group' && body.subject.id === EVERYONE_GROUP_ID && !isAdmin(viewer)) return { path: [...path, 'subject'], message: 'Only admins can grant access to Everyone', code: 'forbidden' };
     if (!(await this.subjectExists(body.subject))) return { path: [...path, 'subject', 'id'], message: 'Subject not found', code: 'not_found' };
     const expiresAt = body.expiresAt ? fromIso(body.expiresAt) : null;
     if (expiresAt !== null && expiresAt <= this.clock.now()) return { path: [...path, 'expiresAt'], message: 'Must be in the future', code: 'too_small' };
@@ -144,6 +146,7 @@ export class GrantsService {
     if (!row) throw AppError.notFound('Grant');
     const serverId = await this.serverOf({ type: row.target_type, id: row.target_id }).catch(() => null);
     if (!can(viewer, 'grants:write', { serverId: serverId ?? null })) throw globalReader(viewer) || viewer.ownedServerIds.length ? AppError.forbidden() : AppError.notFound('Grant');
+    if (isEveryone(row) && !isAdmin(viewer)) throw AppError.forbidden('Only admins can change access for Everyone');
     const [before] = await this.toApi([row]);
     await this.db.deleteFrom('grants').where('id', '=', id).execute();
     await this.acl.aclChanged();
@@ -168,6 +171,7 @@ export class GrantsService {
       deleteServer.set(id, sid);
       if (!r) errors.push({ path: ['deletes', String(i)], message: 'Grant not found', code: 'not_found' });
       else if (!can(viewer, 'grants:write', { serverId: sid })) errors.push({ path: ['deletes', String(i)], message: 'You do not manage this server', code: 'forbidden' });
+      else if (isEveryone(r) && !isAdmin(viewer)) errors.push({ path: ['deletes', String(i)], message: 'Only admins can change access for Everyone', code: 'forbidden' });
     }
     if (errors.length) throw AppError.validation(`${errors.length} entr${errors.length === 1 ? 'y is' : 'ies are'} invalid`, errors);
     const now = this.clock.now();

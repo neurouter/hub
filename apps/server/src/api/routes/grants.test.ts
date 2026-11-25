@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FakeUpstream } from '../../../test-utils/fake-upstream.js';
 import { createTestContext, type TestContext, type TestUser } from '../../test/fakes/context.js';
@@ -49,6 +50,40 @@ describe('grants REST', () => {
     expect((await ctx.as(owner, { method: 'GET', url: `/api/grants?serverId=${s1}&effect=allow` })).json().items).toHaveLength(1);
     expect((await ctx.as(other, { method: 'DELETE', url: `/api/grants/${g.json().id}` })).statusCode).toBe(403);
     expect((await ctx.as(owner, { method: 'DELETE', url: `/api/grants/${g.json().id}` })).statusCode).toBe(204);
+  });
+
+  it('Everyone: admins open a server to every user; owners cannot grant or revoke it; deny still wins', async () => {
+    const everyone = { type: 'group', id: EVERYONE_GROUP_ID };
+    const effective = async (u: TestUser) => (await ctx.as(admin, { method: 'GET', url: `/api/grants/effective?subjectType=user&subjectId=${u.id}&serverId=${s1}` })).json();
+    expect((await effective(alice)).decision).toBe('none');
+    expect((await ctx.as(owner, { method: 'POST', url: '/api/grants', payload: { subject: everyone, target: { type: 'server', id: s1 }, effect: 'allow' } })).statusCode).toBe(403);
+    const g = await ctx.as(admin, { method: 'POST', url: '/api/grants', payload: { subject: everyone, target: { type: 'server', id: s1 }, effect: 'allow' } });
+    expect(g.statusCode).toBe(201);
+    expect(g.json()).toMatchObject({ subject: { type: 'group', name: 'Everyone' } });
+    // every user, including one created afterwards, gets access through Everyone
+    const late = await ctx.user('late@x.test');
+    for (const u of [alice, late]) {
+      const e = await effective(u);
+      expect(e.decision).toBe('allow');
+      expect(e.perTool[0].via[0]).toMatchObject({ kind: 'group', subject: { id: EVERYONE_GROUP_ID } });
+    }
+    // deny still wins over Everyone
+    await ctx.as(owner, { method: 'POST', url: '/api/grants', payload: { subject: { type: 'user', id: alice.id }, target: { type: 'server', id: s1 }, effect: 'deny' } });
+    expect((await effective(alice)).decision).toBe('deny');
+    // only admins can revoke it, too
+    expect((await ctx.as(owner, { method: 'DELETE', url: `/api/grants/${g.json().id}` })).statusCode).toBe(403);
+    expect((await ctx.as(owner, { method: 'POST', url: '/api/grants/batch', payload: { upserts: [], deletes: [g.json().id] } })).statusCode).toBe(422);
+    expect((await ctx.as(admin, { method: 'DELETE', url: `/api/grants/${g.json().id}` })).statusCode).toBe(204);
+    expect((await effective(late)).decision).toBe('none');
+    // the built-in group can't be edited, deleted or given members
+    for (const req of [
+      { method: 'PATCH', url: `/api/groups/${EVERYONE_GROUP_ID}`, payload: { name: 'x' } },
+      { method: 'DELETE', url: `/api/groups/${EVERYONE_GROUP_ID}` },
+      { method: 'POST', url: `/api/groups/${EVERYONE_GROUP_ID}/members`, payload: { userIds: [alice.id] } },
+    ] as const) expect((await ctx.as(admin, req)).statusCode).toBe(409);
+    const detail = (await ctx.as(admin, { method: 'GET', url: `/api/groups/${EVERYONE_GROUP_ID}` })).json();
+    expect(detail).toMatchObject({ builtin: true, actions: [] });
+    expect(detail.memberCount).toBeGreaterThanOrEqual(6);
   });
 
   it('batch is all-or-nothing and lists offending entries', async () => {

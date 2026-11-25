@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestContext, type TestContext, type TestUser } from '../../test/fakes/context.js';
 import { hashSecret, parseApiKey } from '../../identity/api-key-format.js';
@@ -79,7 +80,7 @@ describe('identity REST', () => {
     expect((await ctx.as(admin, { method: 'POST', url: `/api/groups/${g.id}/members`, payload: { userIds: [alice.id, alice.id] } })).json()).toEqual({ added: 1 });
     const members = (await ctx.as(auditor, { method: 'GET', url: `/api/groups/${g.id}/members` })).json();
     expect(members.items).toMatchObject([{ user: { email: 'alice@x.test' }, source: 'local' }]);
-    expect((await ctx.as(alice, { method: 'GET', url: '/api/groups' })).json().items).toEqual([{ id: g.id, name: 'Eng' }]);
+    expect((await ctx.as(alice, { method: 'GET', url: '/api/groups' })).json().items).toEqual([{ id: g.id, name: 'Eng' }, { id: EVERYONE_GROUP_ID, name: 'Everyone' }]);
     expect((await ctx.as(auditor, { method: 'GET', url: '/api/groups' })).json().items[0]).toMatchObject({ memberCount: 1 });
 
     await ctx.s.dbs.main.db.updateTable('group_memberships').set({ source: 'oidc' }).execute();

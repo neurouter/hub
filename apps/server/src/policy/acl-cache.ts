@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import type { Kysely } from 'kysely';
 import type { CoordinationStore } from '../coordination/types.js';
 import type { MainDB } from '../db/schema.js';
@@ -123,5 +124,5 @@ export class AclService {
 /** Loads the ACL principal for a user (and optionally one of their agents). */
 export async function loadAclPrincipal(db: Kysely<MainDB>, userId: string, agent: { id: string; narrowed: boolean } | null): Promise<AclPrincipal> {
   const groups = await db.selectFrom('group_memberships').select('group_id').where('user_id', '=', userId).execute();
-  return { userId, groupIds: groups.map((g) => g.group_id), agent };
+  return { userId, groupIds: [EVERYONE_GROUP_ID, ...groups.map((g) => g.group_id)], agent };
 }

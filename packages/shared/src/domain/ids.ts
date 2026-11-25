@@ -14,3 +14,9 @@ export type ApprovalId = Brand<string, 'ApprovalId'>;
 export type AuditEventId = Brand<string, 'AuditEventId'>;
 export type SessionId = Brand<string, 'SessionId'>;
 export type JobId = Brand<string, 'JobId'>;
+
+/**
+ * The built-in "Everyone" group: every user is an implicit member (no membership rows), so a
+ * grant to it opens a server or tool to the whole organization. Only admins may grant to it.
+ */
+export const EVERYONE_GROUP_ID = '00000000-0000-7000-8000-00000000e001';

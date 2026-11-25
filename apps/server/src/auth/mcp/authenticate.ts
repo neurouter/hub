@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import type { Kysely } from 'kysely';
 import type { CoordinationStore } from '../../coordination/types.js';
 import type { MainDB } from '../../db/schema.js';
@@ -84,7 +85,7 @@ export class McpAuthenticator {
       ok: true,
       principal: {
         user: { id: a.uid, email: a.email, name: a.uname },
-        groupIds: groups.map((g) => g.group_id),
+        groupIds: [EVERYONE_GROUP_ID, ...groups.map((g) => g.group_id)],
         agent: { id: a.id, name: a.name, narrowed: toBool(a.narrowed), rateLimit: parseJsonColumn(a.rate_limit) },
         authMethod,
         credentialId,

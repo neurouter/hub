@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import * as z from 'zod';
-import { RefreshCwIcon, StethoscopeIcon } from 'lucide-react';
-import { api, can } from '@neurouter/shared';
+import { PlusIcon, RefreshCwIcon, StethoscopeIcon } from 'lucide-react';
+import { api, can, isAdmin } from '@neurouter/shared';
 import { AreaError, guard } from '@/app/route-guards';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,8 @@ import { Segmented } from '@/components/filters/segmented';
 import { PageHeader } from '@/components/layout/page-header';
 import { DetailList, Page, Section } from '@/components/layout/section';
 import { HealthBadge, Pill, RequestStatusBadge } from '@/components/status/status';
+import { AddGrantDialog } from '@/features/grants/add-grant-dialog';
+import { EveryoneAccess } from '@/features/grants/everyone-access';
 import { GrantsTable } from '@/features/grants/grants-table';
 import { CredentialsPanel } from '@/features/servers/credentials-panel';
 import { HealthChart } from '@/features/servers/health-chart';
@@ -169,9 +171,7 @@ function ServerDetailPage() {
           <HealthPanel serverId={s.id} name={s.name} canCheck={canWrite} />
         </TabsContent>
         <TabsContent value="access" className="flex flex-col gap-5 pt-3">
-          <Section title="Grants on this server" bodyClassName="p-0">
-            <GrantsTable filter={{ serverId: s.id }} canWrite={can(me, 'grants:write', { serverId: s.id })} />
-          </Section>
+          <ServerAccess serverId={s.id} serverName={s.name} canGrant={can(me, 'grants:write', { serverId: s.id })} admin={isAdmin(me)} />
           {can(me, 'accessRequests:review', { serverId: s.id }) ? (
             <Section title="Pending access requests" bodyClassName="p-0">
               <ServerAccessRequests serverId={s.id} />
@@ -183,5 +183,30 @@ function ServerDetailPage() {
         </TabsContent>
       </Tabs>
     </Page>
+  );
+}
+
+/** Grants on one server: add a grant pre-filled with the server; admins can open it to everyone. */
+function ServerAccess({ serverId, serverName, canGrant, admin }: { serverId: string; serverName: string; canGrant: boolean; admin: boolean }) {
+  const [adding, setAdding] = useState(false);
+  return (
+    <Section
+      title="Grants on this server"
+      description="Nothing is callable until a grant allows it. A grant on the server covers every tool, including tools added later. Deny always wins."
+      bodyClassName="p-0"
+      actions={
+        <>
+          {admin ? <EveryoneAccess serverId={serverId} serverName={serverName} /> : null}
+          {canGrant ? (
+            <Button size="sm" onClick={() => setAdding(true)}>
+              <PlusIcon /> Add grant
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      <GrantsTable filter={{ serverId }} canWrite={canGrant} />
+      {canGrant ? <AddGrantDialog open={adding} onOpenChange={setAdding} initialServer={{ id: serverId, name: serverName }} /> : null}
+    </Section>
   );
 }

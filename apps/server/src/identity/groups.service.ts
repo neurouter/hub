@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import { can, type AddMembersBody, type ClaimMapping, type CreateClaimMappingBody, type CreateGroupBody, type GroupDetail, type GroupListItem, type GroupMember, type GroupRow, type ListGroupsQuery, type ListMembersQuery, type UpdateGroupBody } from '@neurouter/shared';
+import { EVERYONE_GROUP_ID, can, type AddMembersBody, type ClaimMapping, type CreateClaimMappingBody, type CreateGroupBody, type GroupDetail, type GroupListItem, type GroupMember, type GroupRow, type ListGroupsQuery, type ListMembersQuery, type UpdateGroupBody } from '@neurouter/shared';
 import type { AuditRecorder } from '../audit/recorder.js';
 import type { MainDB } from '../db/schema.js';
 import type { Clock } from '../lib/clock.js';
@@ -29,15 +29,18 @@ export class GroupsService {
       this.db.selectFrom('group_claim_mappings').select(['group_id', sql<number>`count(*)`.as('n')]).where('group_id', 'in', ids).groupBy('group_id').execute(),
       this.db.selectFrom('grants').select(['subject_id', sql<number>`count(*)`.as('n')]).where('subject_type', '=', 'group').where('subject_id', 'in', ids).groupBy('subject_id').execute(),
     ]);
+    const everyone = ids.includes(EVERYONE_GROUP_ID) ? Number((await this.db.selectFrom('users').select(sql<number>`count(*)`.as('n')).where('status', '=', 'active').executeTakeFirst())?.n ?? 0) : 0;
     for (const g of groups) {
+      const builtin = g.id === EVERYONE_GROUP_ID;
       out.set(g.id, {
         id: g.id,
         name: g.name,
         description: g.description,
         source: g.source,
-        memberCount: Number(members.find((m) => m.group_id === g.id)?.n ?? 0),
+        memberCount: builtin ? everyone : Number(members.find((m) => m.group_id === g.id)?.n ?? 0),
         mappingCount: Number(mappings.find((m) => m.group_id === g.id)?.n ?? 0),
         grantCount: Number(grants.find((m) => m.subject_id === g.id)?.n ?? 0),
+        ...(builtin ? { builtin: true } : {}),
       });
     }
     return out;
@@ -65,7 +68,7 @@ export class GroupsService {
   async detail(id: string, viewer: UserSubject): Promise<GroupDetail> {
     const row = await this.row(id);
     const g = await this.db.selectFrom('groups').select(['created_at', 'updated_at']).where('id', '=', id).executeTakeFirstOrThrow();
-    return { ...row, createdAt: toIso(g.created_at), updatedAt: toIso(g.updated_at), actions: can(viewer, 'groups:write') ? ['update', 'delete', 'manage_members', 'manage_mappings'] : [] };
+    return { ...row, createdAt: toIso(g.created_at), updatedAt: toIso(g.updated_at), actions: can(viewer, 'groups:write') && id !== EVERYONE_GROUP_ID ? ['update', 'delete', 'manage_members', 'manage_mappings'] : [] };
   }
 
   async create(body: CreateGroupBody, actor: UserSubject): Promise<GroupRow> {
@@ -77,6 +80,10 @@ export class GroupsService {
     return this.row(id);
   }
 
+  private assertEditable(id: string): void {
+    if (id === EVERYONE_GROUP_ID) throw AppError.conflict('Everyone is a built-in group: every user is a member, and it cannot be changed');
+  }
+
   private async assertNameFree(name: string, exceptId?: string): Promise<void> {
     let q = this.db.selectFrom('groups').select('id').where(sql<boolean>`lower(name) = ${name.toLowerCase()}`);
     if (exceptId) q = q.where('id', '!=', exceptId);
@@ -84,6 +91,7 @@ export class GroupsService {
   }
 
   async update(id: string, body: UpdateGroupBody, actor: UserSubject): Promise<GroupRow> {
+    this.assertEditable(id);
     const before = await this.row(id);
     if (body.name !== undefined) await this.assertNameFree(body.name, id);
     await this.db
@@ -97,6 +105,7 @@ export class GroupsService {
   }
 
   async delete(id: string, actor: UserSubject): Promise<void> {
+    this.assertEditable(id);
     const before = await this.row(id);
     await this.db.transaction().execute(async (trx) => {
       await trx.deleteFrom('grants').where('subject_type', '=', 'group').where('subject_id', '=', id).execute();
@@ -125,6 +134,7 @@ export class GroupsService {
   }
 
   async addMembers(id: string, body: AddMembersBody, actor: UserSubject): Promise<{ added: number }> {
+    this.assertEditable(id);
     await this.row(id);
     const users = await this.db.selectFrom('users').select('id').where('id', 'in', body.userIds).execute();
     const missing = body.userIds.filter((u) => !users.some((x) => x.id === u));
@@ -154,6 +164,7 @@ export class GroupsService {
   }
 
   async createMapping(id: string, body: CreateClaimMappingBody, actor: UserSubject): Promise<ClaimMapping> {
+    this.assertEditable(id);
     await this.row(id);
     const dup = await this.db.selectFrom('group_claim_mappings').select('id').where('group_id', '=', id).where('claim', '=', body.claim).where('value', '=', body.value).executeTakeFirst();
     if (dup) throw AppError.conflict('This mapping already exists');

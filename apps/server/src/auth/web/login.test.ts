@@ -1,3 +1,4 @@
+import { EVERYONE_GROUP_ID } from '@neurouter/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestContext, FakeClock, type TestContext } from '../../test/fakes/context.js';
 import type { OidcProvider } from './oidc.js';
@@ -102,7 +103,7 @@ describe('OIDC login', () => {
     const u = await db.selectFrom('users').select('id').where('email', '=', 'ann@acme.test').executeTakeFirstOrThrow();
     const names = async () => (await db.selectFrom('group_memberships as m').innerJoin('groups as g', 'g.id', 'm.group_id').select(['g.name', 'm.source']).where('m.user_id', '=', u.id).orderBy('g.name').execute());
     expect(await names()).toEqual([{ name: 'eng', source: 'oidc' }, { name: 'sec', source: 'oidc' }]);
-    expect(await db.selectFrom('groups').select(['name', 'source']).orderBy('name').execute()).toEqual([{ name: 'eng', source: 'oidc' }, { name: 'sec', source: 'oidc' }]);
+    expect(await db.selectFrom('groups').select(['name', 'source']).where('id', '!=', EVERYONE_GROUP_ID).orderBy('name').execute()).toEqual([{ name: 'eng', source: 'oidc' }, { name: 'sec', source: 'oidc' }]);
     expect((await db.selectFrom('user_roles').selectAll().where('user_id', '=', u.id).execute()).map((r) => [r.role, r.source])).toEqual([['auditor', 'oidc']]);
 
     // a local membership survives; the stale oidc membership and role go away

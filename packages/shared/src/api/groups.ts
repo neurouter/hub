@@ -11,6 +11,8 @@ export const GroupRow = z.object({
   memberCount: z.number().int().nonnegative(),
   mappingCount: z.number().int().nonnegative(),
   grantCount: z.number().int().nonnegative(),
+  /** The built-in Everyone group: all users are members; it can't be edited, deleted or mapped. */
+  builtin: z.boolean().optional(),
 });
 export type GroupRow = z.infer<typeof GroupRow>;
 

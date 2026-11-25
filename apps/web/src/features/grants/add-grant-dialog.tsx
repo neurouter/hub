@@ -45,9 +45,20 @@ export function grantBody(d: GrantDraft): { body: { subject: { type: SubjectType
 const SUBJECT_SEARCH = { user: pickerSearch.users, group: pickerSearch.groups, agent: pickerSearch.agents };
 
 /** "Add grant" (§5.2): subject type + subject, server → optional tool, Allow / Deny, optional expiry. */
-export function AddGrantDialog({ open, onOpenChange, initialServer }: { open: boolean; onOpenChange: (o: boolean) => void; initialServer?: PickerOption | null }) {
+export function AddGrantDialog({
+  open,
+  onOpenChange,
+  initialServer,
+  initialSubject,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  initialServer?: PickerOption | null;
+  /** Pre-filled subject (e.g. from a group page). */
+  initialSubject?: { type: SubjectType; option: PickerOption };
+}) {
   const qc = useQueryClient();
-  const blank: GrantDraft = { subjectType: 'group', subject: null, server: initialServer ?? null, tool: null, effect: 'allow', expiresOn: '' };
+  const blank: GrantDraft = { subjectType: initialSubject?.type ?? 'group', subject: initialSubject?.option ?? null, server: initialServer ?? null, tool: null, effect: 'allow', expiresOn: '' };
   const [d, setD] = useState<GrantDraft>(blank);
   const [error, setError] = useState<string | null>(null);
   const create = useMutation({

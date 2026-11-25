@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as z from 'zod';
-import { LockIcon, TrashIcon } from 'lucide-react';
+import { LockIcon, PlusIcon, TrashIcon, UsersIcon } from 'lucide-react';
 import { api, can, type ClaimMapping, type GroupMember } from '@neurouter/shared';
 import { AreaError, guard } from '@/app/route-guards';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { EntityPicker } from '@/components/filters/entity-picker';
 import { PageHeader } from '@/components/layout/page-header';
 import { Page, Section } from '@/components/layout/section';
 import { Pill } from '@/components/status/status';
+import { AddGrantDialog } from '@/features/grants/add-grant-dialog';
 import { GrantsTable } from '@/features/grants/grants-table';
 import { EditGroupDialog } from '@/features/groups/edit-group-dialog';
 import { groupKeys, groupMappingsQuery, groupMembersQuery, groupQuery } from '@/features/groups/queries';
@@ -166,7 +167,8 @@ function GroupDetailPage() {
   const q = useQuery(groupQuery(groupId));
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
-  const canWrite = can(me, 'groups:write');
+  const [granting, setGranting] = useState(false);
+  const canGrant = can(me, 'grants:write');
   const del = useMutation({
     mutationFn: () => apiFetch(api.groups.delete, { params: { id: groupId } }),
     onSuccess: () => {
@@ -179,6 +181,8 @@ function GroupDetailPage() {
   if (q.error) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const g = q.data;
   if (!g) return <Skeleton className="h-64 w-full" />;
+  const builtin = !!g.builtin;
+  const canWrite = can(me, 'groups:write') && !builtin;
   return (
     <Page>
       <PageHeader
@@ -201,25 +205,40 @@ function GroupDetailPage() {
       />
       {canWrite ? <EditGroupDialog group={g} open={editing} onOpenChange={setEditing} /> : null}
       <div className="-mt-3 flex gap-2">
-        {g.source === 'oidc' ? <Pill tone="muted" icon={LockIcon}>IdP group</Pill> : <Pill tone="outline">local group</Pill>}
+        {builtin ? <Pill tone="info" icon={UsersIcon}>built-in · all users</Pill> : g.source === 'oidc' ? <Pill tone="muted" icon={LockIcon}>IdP group</Pill> : <Pill tone="outline">local group</Pill>}
         <Pill tone="muted">{g.memberCount} members</Pill>
       </div>
       <Tabs value={tab} onValueChange={(v) => void navigate({ search: { tab: v === 'members' ? undefined : (v as (typeof TABS)[number]) }, replace: true })}>
         <TabsList aria-label="Group sections">
           <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="mappings">Claim mappings</TabsTrigger>
+          {builtin ? null : <TabsTrigger value="mappings">Claim mappings</TabsTrigger>}
           <TabsTrigger value="grants">Grants</TabsTrigger>
         </TabsList>
         <TabsContent value="members" className="pt-2">
-          <Members groupId={groupId} local={g.source === 'local'} canWrite={canWrite} />
+          {builtin ? (
+            <p className="text-[13.5px] text-muted-foreground">Every user is a member of this group, including users who sign in later. Grant a server to Everyone to make it available to the whole organization.</p>
+          ) : (
+            <Members groupId={groupId} local={g.source === 'local'} canWrite={canWrite} />
+          )}
         </TabsContent>
         <TabsContent value="mappings" className="pt-2">
           <Mappings groupId={groupId} canWrite={canWrite} />
         </TabsContent>
         <TabsContent value="grants" className="pt-2">
-          <Section title="Grants to this group" bodyClassName="p-0">
-            <GrantsTable filter={{ subjectType: 'group', subjectId: groupId }} canWrite={can(me, 'grants:write')} hideSubject />
+          <Section
+            title="Grants to this group"
+            bodyClassName="p-0"
+            actions={
+              canGrant ? (
+                <Button size="sm" onClick={() => setGranting(true)}>
+                  <PlusIcon /> Add grant
+                </Button>
+              ) : null
+            }
+          >
+            <GrantsTable filter={{ subjectType: 'group', subjectId: groupId }} canWrite={canGrant} hideSubject />
           </Section>
+          {canGrant ? <AddGrantDialog open={granting} onOpenChange={setGranting} initialSubject={{ type: 'group', option: { id: g.id, name: g.name } }} /> : null}
         </TabsContent>
       </Tabs>
       <ConfirmDialog
