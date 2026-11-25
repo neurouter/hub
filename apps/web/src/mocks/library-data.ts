@@ -234,7 +234,7 @@ function detail(s: Seed): LibraryEntryDetail {
   const check: LibraryCheck | null = checkedAt
     ? {
         checkedAt,
-        connection: s.connection ? { ...s.connection, serverInfo: s.connection.serverInfo ?? null } : null,
+        connection: s.connection ? { ...s.connection, paymentRequired: s.connection.paymentRequired ?? false, serverInfo: s.connection.serverInfo ?? null } : null,
         tools: lint?.tools ?? [],
         github: s.github ? { repo: s.github.repo, found: s.github.found, archived: s.github.archived, stars: s.github.stars, pushedAt: s.github.pushedAt ? iso(s.github.pushedAt) : null, license: s.github.license, ownerType: s.github.ownerType, error: null } : null,
       }
