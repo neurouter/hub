@@ -323,6 +323,7 @@ export function libraryList(q: URLSearchParams): LibraryEntryRow[] {
 export const LIBRARY_STATUS: LibraryStatus = {
   enabled: true,
   registryUrl: 'https://registry.modelcontextprotocol.io',
+  autoCheck: true,
   hasGithubToken: true,
   sync: { running: false, mode: 'incremental', pages: 21, lastRunAt: iso(NOW - 23 * 60_000), lastSuccessAt: iso(NOW - 22 * 60_000), lastFullAt: iso(NOW - 3 * DAY), lastError: null },
   counts: { total: LIBRARY.length, remote: LIBRARY.filter((e) => e.hasRemote).length, checked: LIBRARY.filter((e) => e.check).length },

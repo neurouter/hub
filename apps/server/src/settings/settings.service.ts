@@ -39,7 +39,7 @@ export interface SettingValues {
   /** Drop the `tool` label from /metrics for very large catalogs (§10.4). */
   metricsToolLabel: boolean;
   /** MCP server library: registry sync is off until an admin enables it (outbound requests). */
-  librarySync: { enabled: boolean; registryUrl: string; githubTokenRef: string | null };
+  librarySync: { enabled: boolean; registryUrl: string; githubTokenRef: string | null; autoCheck?: boolean };
 }
 
 export type SettingKey = keyof SettingValues;

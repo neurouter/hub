@@ -139,6 +139,7 @@ export class LibraryService {
     return {
       enabled: cfg.enabled,
       registryUrl: cfg.registryUrl,
+      autoCheck: cfg.autoCheck ?? true,
       hasGithubToken: cfg.githubTokenRef !== null,
       sync: {
         running,
@@ -167,6 +168,7 @@ export class LibraryService {
       next.registryUrl = body.registryUrl.replace(/\/+$/, '');
     }
     if (body.enabled !== undefined) next.enabled = body.enabled;
+    if (body.autoCheck !== undefined) next.autoCheck = body.autoCheck;
     if (body.githubToken !== undefined) {
       if (body.githubToken === null) {
         if (cur.githubTokenRef) await this.d.secrets.delete({ id: cur.githubTokenRef }).catch(() => {});
@@ -183,8 +185,8 @@ export class LibraryService {
       action: 'library.settings.update',
       targetType: 'settings',
       targetId: 'library',
-      before: { enabled: cur.enabled, registryUrl: cur.registryUrl, hasGithubToken: cur.githubTokenRef !== null },
-      after: { enabled: next.enabled, registryUrl: next.registryUrl, hasGithubToken: next.githubTokenRef !== null },
+      before: { enabled: cur.enabled, registryUrl: cur.registryUrl, autoCheck: cur.autoCheck ?? true, hasGithubToken: cur.githubTokenRef !== null },
+      after: { enabled: next.enabled, registryUrl: next.registryUrl, autoCheck: next.autoCheck ?? true, hasGithubToken: next.githubTokenRef !== null },
     });
     return this.status();
   }
@@ -316,7 +318,7 @@ export class LibraryService {
         published_at: meta.publishedAt,
         registry_updated_at: meta.updatedAt,
         seen_at: seenAt,
-        search_text: [namespace, gh ? `${gh.owner} ${gh.repo}` : '', ...hosts, ...packages.map((p) => p.identifier)].join(' ').slice(0, 2000),
+        search_text: [namespace.replace(/^io\.github\./, ''), gh ? `${gh.owner} ${gh.repo}` : '', ...hosts, ...packages.map((p) => p.identifier)].join(' ').slice(0, 2000),
         created_at: now,
         updated_at: now,
       });
@@ -337,7 +339,8 @@ export class LibraryService {
       if (this.d.dialect === 'sqlite' && unique.length) {
         const ids = await trx.selectFrom('library_entries').select(['id', 'name', 'title', 'description', 'search_text']).where('name', 'in', unique.map((r) => r.name)).execute();
         await sql`delete from library_fts where entry_id in (${sql.join(ids.map((x) => x.id))})`.execute(trx);
-        for (const x of ids) await sql`insert into library_fts(entry_id, name, title, description, search_text) values (${x.id}, ${x.name}, ${x.title ?? ''}, ${x.description}, ${x.search_text})`.execute(trx);
+        // `io.github.` prefixes more than half of all names: indexed, it makes "github" match everything
+        for (const x of ids) await sql`insert into library_fts(entry_id, name, title, description, search_text) values (${x.id}, ${x.name.replace(/^io\.github\./, '')}, ${x.title ?? ''}, ${x.description}, ${x.search_text})`.execute(trx);
       }
     });
     return unique.length;
@@ -365,7 +368,7 @@ export class LibraryService {
   private checkFacts(stored: StoredCheck | null): { connection: ConnectionFacts | null; lint: DefinitionLint | null; github: GithubFacts | null } {
     if (!stored) return { connection: null, lint: null, github: null };
     const c = stored.connection;
-    const connection: ConnectionFacts | null = c ? { ok: c.ok, authRequired: c.authRequired, oauthDiscovery: c.oauthDiscovery, protocolVersion: c.protocolVersion, latencyMs: c.latencyMs, toolCount: c.toolCount, error: c.error } : null;
+    const connection: ConnectionFacts | null = c ? { ok: c.ok, authRequired: c.authRequired, oauthDiscovery: c.oauthDiscovery, paymentRequired: c.paymentRequired ?? false, protocolVersion: c.protocolVersion, latencyMs: c.latencyMs, toolCount: c.toolCount, error: c.error } : null;
     // tools are only known when the server listed them without credentials
     const lint: DefinitionLint | null = c?.ok && stored.lint ? { ...stored.lint, tools: stored.tools } : null;
     const g = stored.github;
@@ -601,11 +604,21 @@ export class LibraryService {
    * discovery, and look up the GitHub repository. Then regrade.
    */
   async check(id: string, actorId: string): Promise<LibraryEntryDetail> {
-    const r = await this.load(id);
+    await this.runCheck(await this.load(id), { actorId, github: true });
+    return this.get(id);
+  }
+
+  /** One check; background checks read GitHub only with a token (60 unauthenticated lookups an hour would run out). */
+  private async runCheck(r: EntryRow, opts: { actorId: string | null; github: boolean }): Promise<void> {
+    const id = r.id;
     const cfg = await this.d.settings.get('librarySync');
     const remotes = (parseJsonColumn(r.remotes) as LibraryRemote[] | null) ?? [];
     const remote = remotes[0];
-    const [conn, github] = await Promise.all([remote ? this.probe(remote) : Promise.resolve(null), this.github(r.repository_url, cfg.githubTokenRef)]);
+    const prev = parseJsonColumn(r.check_result) as StoredCheck | null;
+    const readGithub = opts.github || cfg.githubTokenRef !== null;
+    const [conn, fresh] = await Promise.all([remote ? this.probe(remote) : Promise.resolve(null), readGithub ? this.github(r.repository_url, cfg.githubTokenRef) : Promise.resolve(undefined)]);
+    // keep the last GitHub result when this check didn't read it
+    const github = fresh === undefined ? (prev?.github ? { api: prev.github, owner: prev.githubOwner ?? '' } : null) : fresh;
     const stored: StoredCheck = {
       checkedAt: new Date(this.d.clock.now()).toISOString(),
       connection: conn?.connection ?? null,
@@ -621,12 +634,54 @@ export class LibraryService {
       .set({ check_result: updated.check_result, checked_at: updated.checked_at, ...LibraryService.gradeColumns(q), graded_at: this.d.clock.now() })
       .where('id', '=', id)
       .execute();
-    this.d.audit.admin({ actorUserId: actorId, action: 'library.entry.check', targetType: 'library_entry', targetId: id, after: { name: r.name, grade: q.grade, connected: conn?.connection?.ok ?? null } });
-    return this.get(id);
+    if (opts.actorId) this.d.audit.admin({ actorUserId: opts.actorId, action: 'library.entry.check', targetType: 'library_entry', targetId: id, after: { name: r.name, grade: q.grade, connected: conn?.connection?.ok ?? null } });
+  }
+
+  /**
+   * Background checks (every 10 minutes while sync and auto-check are on): a few entries per run,
+   * most promising first — verified, then known publishers, then by grade — never checked or
+   * checked over a week ago. Entries already capped at D/F by metadata are skipped (a check
+   * can't lift a cap), as are hidden ones and URLs with template variables.
+   */
+  async checkBatch(limit = 20, concurrency = 4): Promise<number> {
+    const cfg = await this.d.settings.get('librarySync');
+    if (!cfg.enabled || cfg.autoCheck === false) return 0;
+    const stale = this.d.clock.now() - 7 * DAY;
+    const rows = (await this.db
+      .selectFrom('library_entries')
+      .selectAll()
+      .where('status', '=', 'active')
+      .where('has_remote', '=', 1)
+      .where('hidden', '=', 0)
+      .where('remote_url', 'not like', '%{%')
+      .where((eb) => eb.or([eb('checked_at', 'is', null), eb('checked_at', '<', stale)]))
+      .where((eb) => eb.or([eb('checked_at', 'is not', null), eb('grade', 'is', null), eb('grade', 'not in', ['D', 'F'])]))
+      .orderBy(sql`case trust when 'verified' then 0 when 'known' then 1 else 2 end`)
+      .orderBy(sql`case when checked_at is null then 0 else 1 end`)
+      .orderBy(sql`coalesce(grade, 'Z')`)
+      .orderBy(sql`coalesce(grade_score, -1)`, 'desc')
+      .orderBy('name')
+      .limit(limit)
+      .execute()) as EntryRow[];
+    let done = 0;
+    const queue = [...rows];
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
+        for (let r = queue.shift(); r; r = queue.shift()) {
+          try {
+            await this.runCheck(r, { actorId: null, github: false });
+            done++;
+          } catch (err) {
+            this.d.log.warn({ err, entry: r.name }, 'library background check failed');
+          }
+        }
+      }),
+    );
+    return done;
   }
 
   private async probe(remote: LibraryRemote): Promise<{ connection: LibraryCheck['connection']; lint: DefinitionLint | null }> {
-    const fail = (error: string) => ({ connection: { ok: false, authRequired: false, oauthDiscovery: false, protocolVersion: null, serverInfo: null, latencyMs: null, toolCount: null, error }, lint: null });
+    const fail = (error: string, paymentRequired = false) => ({ connection: { ok: false, authRequired: false, oauthDiscovery: false, paymentRequired, protocolVersion: null, serverInfo: null, latencyMs: null, toolCount: null, error }, lint: null });
     if (remote.variables.length) return { connection: null, lint: null };
     try {
       assertUrlAllowed(remote.url, this.d.probePolicy);
@@ -641,16 +696,18 @@ export class LibraryService {
       const latencyMs = Math.round(performance.now() - start);
       const tools = (await conn.client.listTools(undefined, { timeout: 10_000, signal })).tools as LintableTool[];
       return {
-        connection: { ok: true, authRequired: false, oauthDiscovery: false, protocolVersion: conn.protocolVersion, serverInfo: conn.serverInfo ? { name: conn.serverInfo.name.slice(0, 200), version: conn.serverInfo.version.slice(0, 100) } : null, latencyMs, toolCount: tools.length, error: null },
+        connection: { ok: true, authRequired: false, oauthDiscovery: false, paymentRequired: false, protocolVersion: conn.protocolVersion, serverInfo: conn.serverInfo ? { name: conn.serverInfo.name.slice(0, 200), version: conn.serverInfo.version.slice(0, 100) } : null, latencyMs, toolCount: tools.length, error: null },
         lint: lintDefinitions(tools.slice(0, 500)),
       };
     } catch (err) {
       const e = classifyUpstreamError(err, signal);
       const latencyMs = Math.round(performance.now() - start);
       if (e.kind === 'auth_required') {
-        return { connection: { ok: false, authRequired: true, oauthDiscovery: await this.oauthDiscovery(remote.url), protocolVersion: null, serverInfo: null, latencyMs, toolCount: null, error: null }, lint: null };
+        return { connection: { ok: false, authRequired: true, oauthDiscovery: await this.oauthDiscovery(remote.url), paymentRequired: false, protocolVersion: null, serverInfo: null, latencyMs, toolCount: null, error: null }, lint: null };
       }
-      return fail(e.message.slice(0, 300));
+      // a paid endpoint (x402 and the like) is reachable, just not free
+      const paid = e.details.status === 402 || /\b402\b/.test(e.message);
+      return fail(e.message.slice(0, 300), paid);
     } finally {
       await conn?.client.close().catch(() => {});
     }

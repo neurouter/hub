@@ -45,12 +45,23 @@ const INJECTION_PATTERNS: Array<[RegExp, string]> = [
   [/\bignore\s+(all\s+|any\s+)?(previous|prior|above|earlier|other)\s+(instructions|prompts|rules|directions)\b/i, 'ignore previous instructions'],
   [/\bdisregard\s+(all\s+|any\s+)?(previous|prior|above|the\s+system)\b/i, 'disregard previous instructions'],
   [/\b(do\s+not|don't|never)\s+(tell|inform|mention\s+(this\s+)?to|reveal\s+(this\s+)?to|alert)\s+the\s+user\b/i, 'hide from the user'],
-  [/\byou\s+must\s+(always\s+)?(first\s+)?(call|invoke|use|run)\s+/i, 'you must call'],
-  [/\balways\s+(call|invoke|run)\s+this\s+tool\b/i, 'always call this tool'],
+  // the tool-shadowing shape: run this tool ahead of everything else
+  [/\b(always|you\s+must)\s+(first\s+)?(call|invoke|run|use)\s+this\s+tool\s+(first|before)\b/i, 'call this tool first'],
   [/\bbefore\s+(using|calling)\s+any\s+other\s+tool\b/i, 'before any other tool'],
-  [/<\s*\/?\s*(important|system|instructions?|secret)\s*>/i, 'pseudo-tag addressed to the model'],
-  [/\b(read|send|upload|include)\b[^.]{0,60}\b(~\/\.ssh|id_rsa|\.env\b|credentials|api[_ -]?keys?|private key)/i, 'asks for secrets'],
+  [/<\s*\/?\s*(important|system|secret)\s*>/i, 'pseudo-tag addressed to the model'],
+  [/\b(read|send|upload|pass|attach|forward)\b[^.]{0,60}(~\/\.ssh|id_rsa|\.env\b|private[ _-]key|api[_ -]?keys?|passwords?)/i, 'asks for secrets'],
 ];
+
+/** "never send your API key…" warns against the very thing the pattern looks for. */
+const NEGATED = /\b(never|not|don't|do\s+not|no)\b[^.]{0,30}$/i;
+
+function injectionMatch(text: string): string | null {
+  for (const [re, label] of INJECTION_PATTERNS) {
+    const m = re.exec(text);
+    if (m && !(label === 'asks for secrets' && NEGATED.test(text.slice(Math.max(0, m.index - 40), m.index)))) return label;
+  }
+  return null;
+}
 
 // zero-width and bidi control characters
 const HIDDEN_UNICODE = new RegExp(`[${[[0x200b, 0x200f], [0x202a, 0x202e], [0x2060, 0x2064], [0x2066, 0x2069], [0xfeff, 0xfeff]].map(([a, b]) => `${String.fromCodePoint(a!)}-${String.fromCodePoint(b!)}`).join('')}]`);
@@ -142,9 +153,9 @@ export function lintDefinitions(tools: readonly LintableTool[]): DefinitionLint 
   for (const t of tools) {
     const all = texts(t);
     for (const s of all) {
-      const hit = INJECTION_PATTERNS.find(([re]) => re.test(s));
+      const hit = injectionMatch(s);
       if (hit) {
-        injection.push({ tool: t.name, match: hit[1] });
+        injection.push({ tool: t.name, match: hit });
         break;
       }
     }

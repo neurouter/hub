@@ -227,6 +227,34 @@ describe('MCP server library', () => {
     expect(notes.quality.flags.map((f: { code: string }) => f.code)).toContain('unreachable');
   });
 
+  it('search ignores the io.github. prefix: "github" finds GitHub-related servers, not every GitHub publisher', async () => {
+    pages[1]!.push(rec('io.github.octo/github-tools', { description: 'Issues and pull requests on GitHub', remotes: [{ type: 'streamable-http', url: 'https://octo.dev/mcp' }] }));
+    await enable();
+    await ctx.s.library.sync();
+    expect((await list('?q=github')).items.map((e: { name: string }) => e.name)).toEqual(['io.github.octo/github-tools']);
+    expect((await list('?q=octo')).items.map((e: { name: string }) => e.name)).toEqual(['io.github.octo/github-tools']);
+  });
+
+  it('background checks: most promising first, skip entries capped by metadata, no GitHub lookups without a token', async () => {
+    await enable();
+    expect(await ctx.s.library.checkBatch()).toBe(0); // nothing synced yet
+    await ctx.s.library.sync();
+    requests.length = 0;
+    expect(await ctx.s.library.checkBatch(2)).toBe(2);
+    const checked = async () => (await list('?remoteOnly=false')).items.filter((e: { checkedAt: string | null }) => e.checkedAt).map((e: { name: string }) => e.name).sort();
+    // verified first, then the mismatch/unverified ones; the 5 copied-description entries (capped at D) are never picked
+    expect(await checked()).toEqual(['com.example/weather', 'io.github.alice/notes']);
+    expect(await ctx.s.library.checkBatch(20)).toBe(1);
+    expect(await checked()).toEqual(['com.example/billing', 'com.example/weather', 'io.github.alice/notes']);
+    expect(await ctx.s.library.checkBatch(20)).toBe(0); // all fresh for a week
+    expect(requests.filter((r) => r.startsWith('/repos/'))).toEqual([]);
+    expect((await list('?q=weather')).items[0]).toMatchObject({ confidence: 'medium' }); // checked, but no GitHub data without a token
+
+    await ctx.as(admin, { method: 'PATCH', url: '/api/library/settings', payload: { autoCheck: false } });
+    clock.advance(8 * 86_400_000);
+    expect(await ctx.s.library.checkBatch(20)).toBe(0);
+  });
+
   it('hide, Add to gateway (provenance), and the grade of a registered server', async () => {
     await enable();
     await ctx.s.library.sync();

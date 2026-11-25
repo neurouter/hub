@@ -129,6 +129,8 @@ export const LibraryCheck = z.object({
     ok: z.boolean(),
     authRequired: z.boolean(),
     oauthDiscovery: z.boolean(),
+    /** HTTP 402: a paid endpoint (e.g. x402). Not counted as down. */
+    paymentRequired: z.boolean().default(false),
     protocolVersion: z.string().nullable(),
     serverInfo: z.object({ name: z.string(), version: z.string() }).nullable(),
     latencyMs: z.number().int().nonnegative().nullable(),
@@ -197,6 +199,8 @@ export type ListLibraryQuery = z.infer<typeof ListLibraryQuery>;
 export const LibraryStatus = z.object({
   enabled: z.boolean(),
   registryUrl: z.string(),
+  /** Check servers in the background (connect without credentials, lint, GitHub with a token). */
+  autoCheck: z.boolean(),
   hasGithubToken: z.boolean(),
   sync: z.object({
     running: z.boolean(),
@@ -215,6 +219,7 @@ export type LibraryStatus = z.infer<typeof LibraryStatus>;
 export const UpdateLibrarySettingsBody = z.object({
   enabled: z.boolean().optional(),
   registryUrl: z.url().optional(),
+  autoCheck: z.boolean().optional(),
   /** Optional GitHub token for repository signals (write-only; null clears it). */
   githubToken: z.string().min(1).max(500).nullable().optional(),
 });

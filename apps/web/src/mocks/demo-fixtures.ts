@@ -93,8 +93,8 @@ export function demoFixtures(): ContractFixtures {
     /* MCP server library */
     'library.status': () => L.LIBRARY_STATUS,
     'library.updateSettings': async (c: Ctx) => {
-      const b = await body<{ enabled?: boolean; registryUrl?: string; githubToken?: string | null }>(c);
-      return { ...L.LIBRARY_STATUS, ...(b.enabled !== undefined ? { enabled: b.enabled } : {}), ...(b.registryUrl ? { registryUrl: b.registryUrl } : {}), ...(b.githubToken !== undefined ? { hasGithubToken: b.githubToken !== null } : {}) };
+      const b = await body<{ enabled?: boolean; autoCheck?: boolean; registryUrl?: string; githubToken?: string | null }>(c);
+      return { ...L.LIBRARY_STATUS, ...(b.enabled !== undefined ? { enabled: b.enabled } : {}), ...(b.autoCheck !== undefined ? { autoCheck: b.autoCheck } : {}), ...(b.registryUrl ? { registryUrl: b.registryUrl } : {}), ...(b.githubToken !== undefined ? { hasGithubToken: b.githubToken !== null } : {}) };
     },
     'library.sync': { started: true },
     'library.list': (c: Ctx) => page(L.libraryList(qs(c))),

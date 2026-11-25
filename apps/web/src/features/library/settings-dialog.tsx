@@ -16,11 +16,12 @@ import { libraryKeys } from './queries';
 export function LibrarySettingsDialog({ status, open, onOpenChange }: { status: LibraryStatus; open: boolean; onOpenChange: (o: boolean) => void }) {
   const qc = useQueryClient();
   const [enabled, setEnabled] = useState(status.enabled);
+  const [autoCheck, setAutoCheck] = useState(status.autoCheck);
   const [url, setUrl] = useState(status.registryUrl);
   const [token, setToken] = useState('');
   const save = useMutation({
     mutationFn: (extra: { githubToken?: string | null }) =>
-      apiFetch(api.library.updateSettings, { body: { enabled, ...(url !== status.registryUrl ? { registryUrl: url } : {}), ...extra } }),
+      apiFetch(api.library.updateSettings, { body: { enabled, autoCheck, ...(url !== status.registryUrl ? { registryUrl: url } : {}), ...extra } }),
     onSuccess: (st) => {
       qc.setQueryData(libraryKeys.status(), st);
       void qc.invalidateQueries({ queryKey: libraryKeys.all });
@@ -43,6 +44,15 @@ export function LibrarySettingsDialog({ status, open, onOpenChange }: { status: 
             <div className="flex flex-col gap-0.5">
               <Label htmlFor="lib-enabled">Sync from the registry</Label>
               <span className="text-xs text-muted-foreground">Off by default, so air-gapped installs make no requests. Point the URL at an internal mirror if you need one.</span>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Switch id="lib-autocheck" checked={autoCheck} disabled={!enabled} onCheckedChange={setAutoCheck} />
+            <div className="flex flex-col gap-0.5">
+              <Label htmlFor="lib-autocheck">Check servers in the background</Label>
+              <span className="text-xs text-muted-foreground">
+                Every 10 minutes, connects to up to 20 servers without credentials and lints their tools, most promising first, so grades become more certain. Reads GitHub only when a token is set.
+              </span>
             </div>
           </div>
           <Field>

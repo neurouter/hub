@@ -85,7 +85,7 @@ describe('schema drift (SQLite)', () => {
   it('is idempotent and tracks main and audit sets separately', async () => {
     dbs = createDatabases({ databaseUrl: 'sqlite::memory:' });
     const first = await migrateAll(dbs, { embeddingDims: TEST_EMBEDDING_DIMS });
-    expect(first.main).toEqual(['0001_identity', '0002_catalog', '0003_policy', '0006_search', '0007_approvals', '0008_oauth', '0009_coordination', '0010_approval_api_key', '0011_pinning_mode', '0012_library']);
+    expect(first.main).toEqual(['0001_identity', '0002_catalog', '0003_policy', '0006_search', '0007_approvals', '0008_oauth', '0009_coordination', '0010_approval_api_key', '0011_pinning_mode', '0012_library', '0013_library_search']);
     expect(first.audit).toEqual(['0004_audit', '0005_observability']);
     expect(await migrateAll(dbs, { embeddingDims: TEST_EMBEDDING_DIMS })).toEqual({ main: [], audit: [] });
     const tables = userTables(sqliteOf(dbs));

@@ -56,6 +56,8 @@ export interface ConnectionFacts {
   ok: boolean;
   authRequired: boolean;
   oauthDiscovery: boolean;
+  /** HTTP 402 (a paid endpoint): neither up for free nor down. */
+  paymentRequired?: boolean;
   protocolVersion: string | null;
   latencyMs: number | null;
   toolCount: number | null;
@@ -204,6 +206,9 @@ function connectivity(i: GradeInput, flags: GradeFlag[]): Array<GradeSignal & { 
       out.push({ label: 'Connection without credentials', value: 'Rejected, with no OAuth discovery and no declared header', score: 0.5, w: 3 });
       flags.push({ code: 'auth_undeclared', severity: 'info', message: 'The endpoint requires credentials, but the registry entry declares neither headers nor OAuth discovery.', cap: null });
     }
+  } else if (c.paymentRequired) {
+    out.push({ label: 'Connection without credentials', value: 'Requires payment (HTTP 402)', score: 0.5, w: 3 });
+    flags.push({ code: 'payment_required', severity: 'info', message: 'The endpoint asks for payment (HTTP 402) before it lists anything.', cap: null });
   } else {
     out.push({ label: 'Connection without credentials', value: c.error ? `Failed: ${c.error.slice(0, 120)}` : 'Failed', score: 0, w: 3 });
     flags.push({ code: 'unreachable', severity: 'warn', message: 'The endpoint did not answer the last check.', cap: 'D' });

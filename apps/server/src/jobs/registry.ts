@@ -30,6 +30,8 @@ export function registerJobs(scheduler: JobScheduler, s: Services): void {
 
   // MCP server library: hourly, as the registry asks aggregators to (no-op while sync is disabled)
   scheduler.register({ name: 'library-sync', schedule: '0 7 * * * *', leaseMs: 60 * 60_000, run: async () => void (await s.library.sync()) });
+  // raise grade confidence a few servers at a time (no-op unless sync and auto-check are on)
+  scheduler.register({ name: 'library-checks', schedule: '0 3-59/10 * * * *', leaseMs: 15 * 60_000, run: async () => void (await s.library.checkBatch()) });
 
   registerAuditJobs(scheduler, s);
 }
