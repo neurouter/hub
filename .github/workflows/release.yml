@@ -128,5 +128,6 @@ jobs:
           curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/download/${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
           ./mcp-publisher login dns --domain neurouter.com
           ./mcp-publisher publish
-          ./mcp-publisher status --status deprecated --all-versions \
+          # status asks for confirmation; CI has no TTY.
+          echo y | ./mcp-publisher status --status deprecated --all-versions \
             --message "Renamed to com.neurouter/hub (Neurouter Hub)" com.neurouter/gateway
