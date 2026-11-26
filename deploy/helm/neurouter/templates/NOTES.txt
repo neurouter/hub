@@ -1,4 +1,4 @@
-Neurouter {{ .Chart.AppVersion }} is deployed as {{ include "neurouter.fullname" . }} ({{ .Values.replicaCount }} replicas).
+Neurouter Hub {{ .Chart.AppVersion }} is deployed as {{ include "neurouter.fullname" . }} ({{ .Values.replicaCount }} replicas).
 
   Web app + API:  {{ .Values.publicUrl }}
   MCP endpoint:   {{ .Values.publicUrl }}/mcp
@@ -7,3 +7,7 @@ Neurouter {{ .Chart.AppVersion }} is deployed as {{ include "neurouter.fullname"
 Migrations run {{ if eq .Values.migrations.mode "job" }}in a pre-install/pre-upgrade Job{{ else }}on pod start (under a DB lock){{ end }}.
 Keep the crypto secret ({{ include "neurouter.cryptoSecret" . }}) backed up: without it stored credentials and
 upstream tokens cannot be decrypted and API keys stop working.
+
+DEPRECATED: this chart is renamed. Upgrade in place with
+  helm upgrade {{ .Release.Name }} oci://ghcr.io/neurouter/charts/neurouter-hub --version 0.2.0 --reuse-values
+Resource names, Secrets and the PVC stay the same. See https://hub.neurouter.com/docs/deployment
