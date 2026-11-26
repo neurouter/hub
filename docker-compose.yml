@@ -1,4 +1,4 @@
-# Prod-like local run (backend plan §16.2): Neurouter + Postgres (pgvector).
+# Prod-like local run (backend plan §16.2): Neurouter Hub + Postgres (pgvector).
 #   cp .env.example .env && npm run keys -- gen   # paste NEUROUTER_MASTER_KEYS / NEUROUTER_ACTIVE_KEY_ID / HASH_PEPPER into .env
 #   docker compose up --build                     # http://localhost:3000
 # Optional profiles: `--profile oidc` (Dex IdP for real sign-in), `--profile otel` (OpenTelemetry collector).

@@ -14,8 +14,8 @@ test.describe('OAuth consent', () => {
     const app = `E2E Desktop ${uid()}`;
     await page.goto(await authorizeUrl(app));
     await expect(page).toHaveURL(/\/auth\/consent\?request=/);
-    await expect(page.getByRole('heading', { level: 1, name: `${app} wants to use Neurouter as you` })).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText("Neurouter couldn't verify who made this app");
+    await expect(page.getByRole('heading', { level: 1, name: `${app} wants to use Neurouter Hub as you` })).toBeVisible();
+    await expect(page.getByRole('alert')).toContainText("Neurouter Hub couldn't verify who made this app");
     await expect(page.getByText("You'll be sent to 127.0.0.1:53682")).toBeVisible();
     await expect(page.getByRole('list', { name: 'Requested permissions' })).toContainText('mcp:tools');
     await expect(page.getByRole('combobox', { name: 'Appears in audit as agent' })).toContainText(`@ ${me.me.user.name}`);

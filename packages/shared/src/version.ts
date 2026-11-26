@@ -1,4 +1,4 @@
-export const PRODUCT_NAME = 'Neurouter';
+export const PRODUCT_NAME = 'Neurouter Hub';
 export const API_VERSION = 'v1';
 export const API_BASE_PATH = '/api';
 /** MCP protocol versions the gateway serves (modern first). */

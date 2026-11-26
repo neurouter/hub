@@ -13,7 +13,7 @@ staticPasswords:
     userID: 08a8684b-db88-4b73-90a9-3cd1661f5466
 staticClients:
   - id: neurouter
-    name: Neurouter
+    name: Neurouter Hub
     secret: neurouter-dev-secret
     redirectURIs:
       - http://localhost:3000/api/auth/callback

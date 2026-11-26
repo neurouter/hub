@@ -19,7 +19,7 @@ export async function identityRoutes(app: FastifyInstance, s: Services): Promise
 
   /* ---------------------------------------------------------------- auth */
   registerEndpoint(app, api.auth.providers, async () => ({
-    productName: config.env.ORG_NAME === 'Neurouter' ? 'Neurouter' : `Neurouter · ${config.env.ORG_NAME}`,
+    productName: config.env.ORG_NAME === 'Neurouter' ? 'Neurouter Hub' : `Neurouter Hub · ${config.env.ORG_NAME}`,
     providers: [
       ...(s.login.oidcEnabled ? [{ id: 'oidc' as const, displayName: config.env.OIDC_DISPLAY_NAME }] : []),
       ...(devLoginEnabled ? [{ id: 'dev' as const, displayName: 'Developer login' }] : []),

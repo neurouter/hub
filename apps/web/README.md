@@ -1,6 +1,6 @@
 # @neurouter/web
 
-The Neurouter admin console and user portal: Vite 8, React 19, TanStack Router and Query,
+The Neurouter Hub admin console and user portal: Vite 8, React 19, TanStack Router and Query,
 Tailwind 4 and shadcn on Base UI. The app is always same-origin with the backend. In dev, Vite
 proxies to the backend. In production, the Fastify server serves `dist/`.
 

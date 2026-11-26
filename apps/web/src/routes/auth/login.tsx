@@ -21,7 +21,7 @@ const searchSchema = z.object({
 
 export const LOGIN_ERRORS: Record<z.infer<typeof LoginErrorCode>, string> = {
   access_denied: 'Your identity provider or the gateway denied access.',
-  no_account: 'There is no Neurouter account for you yet. Ask an administrator to add you.',
+  no_account: 'There is no Neurouter Hub account for you yet. Ask an administrator to add you.',
   disabled: 'Your account is disabled.',
   idp_error: 'Sign-in failed at the identity provider. Try again.',
   session_expired: 'Your session expired. Sign in again to continue.',

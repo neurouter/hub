@@ -1,23 +1,29 @@
-# Neurouter
+# Neurouter Hub
 
-[![Release](https://img.shields.io/github/v/release/neurouter/neurouter)](https://github.com/neurouter/neurouter/releases) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.neurouter%2Fgateway-0d9488)](https://registry.modelcontextprotocol.io/?q=com.neurouter) [![neurouter/neurouter MCP server](https://glama.ai/mcp/servers/neurouter/neurouter/badges/score.svg)](https://glama.ai/mcp/servers/neurouter/neurouter) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/neurouter/neurouter) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/17086/badge)](https://www.bestpractices.dev/projects/17086)
+[![Release](https://img.shields.io/github/v/release/neurouter/hub)](https://github.com/neurouter/hub/releases) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.neurouter%2Fhub-0d9488)](https://registry.modelcontextprotocol.io/?q=com.neurouter) [![neurouter/neurouter MCP server](https://glama.ai/mcp/servers/neurouter/neurouter/badges/score.svg)](https://glama.ai/mcp/servers/neurouter/neurouter) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/neurouter/hub) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/17086/badge)](https://www.bestpractices.dev/projects/17086)
 
 Self-hosted **enterprise MCP gateway**. Agents connect to one `/mcp` endpoint and reach only the
 upstream MCP servers and tools they've been granted; every call is authenticated, authorized,
 rate-limited, audited and measured. The same server hosts the admin console and user portal.
 A built-in **server library** syncs the official MCP Registry (opt-in) and grades every server
-A–F by rules you can read ([how grading works](https://neurouter.com/docs/library)).
+A–F by rules you can read ([how grading works](https://hub.neurouter.com/docs/library)).
+
+> **Renamed in 0.2.0:** Neurouter is now **Neurouter Hub**. The image is `ghcr.io/neurouter/hub`
+> (also `docker.io/neurouter/hub`), the chart is `oci://ghcr.io/neurouter/charts/neurouter-hub`, and the
+> registry entry is `com.neurouter/hub`. Nothing else changes: env vars, secrets, resource names and data
+> stay the same, so `helm upgrade <release> oci://ghcr.io/neurouter/charts/neurouter-hub --version 0.2.0 --reuse-values`
+> upgrades in place. `ghcr.io/neurouter/neurouter` still receives 0.2.x images.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/gateway-dark.png">
-  <img alt="AI clients (Claude Code, Cursor, VS Code, ChatGPT, CI) connect to Neurouter's /mcp endpoint; every call passes auth, ACL, rate limit, approval, audit and metrics before reaching MCP servers. An unregistered client is rejected with 401." src="docs/images/gateway-light.png">
+  <img alt="AI clients (Claude Code, Cursor, VS Code, ChatGPT, CI) connect to Neurouter Hub's /mcp endpoint; every call passes auth, ACL, rate limit, approval, audit and metrics before reaching MCP servers. An unregistered client is rejected with 401." src="docs/images/gateway-light.png">
 </picture>
 
-Website: [neurouter.com](https://neurouter.com) · Live demo (read-only, simulated data): [neurouter-demo.web.app](https://neurouter-demo.web.app) · Docs: [neurouter.com/docs](https://neurouter.com/docs)
+Website: [hub.neurouter.com](https://hub.neurouter.com) · Live demo (read-only, simulated data): [neurouter-hub-demo.web.app](https://neurouter-hub-demo.web.app) · Docs: [hub.neurouter.com/docs](https://hub.neurouter.com/docs)
 
-<a href="https://neurouter-demo.web.app"><img src="docs/images/demo.gif" alt="Neurouter console: tool calls held for approval and approved, the audit log filling live, a changed tool blocked until reviewed, grants and traffic metrics" width="800"></a>
+<a href="https://neurouter-hub-demo.web.app"><img src="docs/images/demo.gif" alt="Neurouter Hub console: tool calls held for approval and approved, the audit log filling live, a changed tool blocked until reviewed, grants and traffic metrics" width="800"></a>
 
-<sub>38 s walkthrough of the <a href="https://neurouter-demo.web.app">live demo</a> (simulated data): approvals, the live audit log, a blocked tool definition change, grants and metrics.</sub>
+<sub>38 s walkthrough of the <a href="https://neurouter-hub-demo.web.app">live demo</a> (simulated data): approvals, the live audit log, a blocked tool definition change, grants and metrics.</sub>
 
 > Phase 1 is in progress.
 
@@ -54,7 +60,7 @@ MSW handlers generated from the shared API contract.
 
 ## Run with Docker Compose (Postgres)
 
-A prod-like stack on one machine: the Neurouter image plus Postgres 18 with pgvector.
+A prod-like stack on one machine: the Neurouter Hub image plus Postgres 18 with pgvector.
 
 ```bash
 cp .env.example .env
@@ -82,9 +88,9 @@ Released images (linux/amd64 and linux/arm64) are published to GHCR, signed with
 and shipped with an SBOM and build provenance:
 
 ```bash
-docker pull ghcr.io/neurouter/neurouter:0.1.1
-cosign verify ghcr.io/neurouter/neurouter:0.1.1 \
-  --certificate-identity-regexp '^https://github.com/neurouter/neurouter/\.github/workflows/release\.yml@' \
+docker pull ghcr.io/neurouter/hub:0.2.0
+cosign verify ghcr.io/neurouter/hub:0.2.0 \
+  --certificate-identity-regexp '^https://github.com/neurouter/hub/\.github/workflows/release\.yml@' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -94,22 +100,22 @@ cosign verify ghcr.io/neurouter/neurouter:0.1.1 \
 kubectl create secret generic neurouter-crypto \
   --from-literal=NEUROUTER_MASTER_KEYS='k1:…' --from-literal=NEUROUTER_ACTIVE_KEY_ID=k1 --from-literal=HASH_PEPPER='…'
 kubectl create secret generic neurouter-db --from-literal=DATABASE_URL='postgres://…'
-helm install neurouter oci://ghcr.io/neurouter/charts/neurouter --version 0.1.2 \
+helm install neurouter oci://ghcr.io/neurouter/charts/neurouter-hub --version 0.2.0 \
   --set publicUrl=https://mcp.example.com \
   --set crypto.existingSecret=neurouter-crypto --set database.existingSecret=neurouter-db \
   --set oidc.issuer=https://idp.example.com --set oidc.clientId=neurouter --set oidc.existingSecret=neurouter-oidc \
   --set ingress.enabled=true --set ingress.host=mcp.example.com
 ```
 
-The chart is also in this repo at `deploy/helm/neurouter`; it defaults to the
-`ghcr.io/neurouter/neurouter` image at the chart's `appVersion`.
+The chart is also in this repo at `deploy/helm/neurouter-hub`; it defaults to the
+`ghcr.io/neurouter/hub` image at the chart's `appVersion`.
 
 - Postgres 16+ with the `vector` extension is required for more than one replica (SQLite is
   single-process). Replicas coordinate through Postgres (LISTEN/NOTIFY, advisory locks, leases), so
   rate limits, approvals and caches are shared; no Redis is needed.
 - Defaults: 2 replicas, `RollingUpdate` with `maxUnavailable: 0`, a PodDisruptionBudget, a
   read-only root filesystem with an `emptyDir` on `/tmp`, and `migrations.mode=job` (a
-  pre-install/pre-upgrade Job migrates; pods skip it). Migrations are forward-only and additive, so
+  pre-upgrade Job migrates and pods skip it; the first install migrates on pod start). Migrations are forward-only and additive, so
   old and new pods run side by side during a rollout.
 - `terminationGracePeriodSeconds` is `approvals.maxTimeoutSec + 30`, so calls held for human
   approval can finish during a rollout. Keep it at least the `approvalMaxTimeoutSec` setting.
@@ -153,7 +159,7 @@ every replica.
   credentials; the keys without the database are useless.
 - **Postgres:** `pg_dump -Fc "$DATABASE_URL" > neurouter.dump` (and the same for the audit DB).
   Restore into an empty database with `pg_restore -d "$DATABASE_URL" neurouter.dump`, start
-  Neurouter with the **same** crypto values, then run an audit verification (below).
+  Neurouter Hub with the **same** crypto values, then run an audit verification (below).
 - **SQLite:** stop the server (or use `sqlite3 neurouter.db ".backup backup.db"` while it runs),
   then copy the file. Restore by putting the file back at `DATABASE_URL`.
 - Audit retention archives (`AUDIT_ARCHIVE_URL`: `file:`, `s3://`, `gs://`, `azblob://`) are
@@ -181,7 +187,7 @@ every retention cut.
 - **Identity:** people sign in with OIDC (authorization code + PKCE); sessions are server-side,
   HttpOnly cookies with CSRF tokens. Roles come from IdP groups (`OIDC_ADMIN_GROUPS`,
   `OIDC_AUDITOR_GROUPS`). `AUTH_DEV_LOGIN` is refused outside development.
-- **Agents** authenticate to `/mcp` with an API key or an OAuth access token issued by Neurouter's
+- **Agents** authenticate to `/mcp` with an API key or an OAuth access token issued by Neurouter Hub's
   own authorization server (RFC 8414 metadata, client ID metadata documents, dynamic registration,
   PKCE S256, audience-bound tokens, rotating refresh tokens). Client tokens are never forwarded
   upstream.
@@ -193,7 +199,7 @@ every retention cut.
   the pinned schema.
 - **Human approval:** `requires_approval` tools are held until an owner or admin approves (never the
   requester), the approval expires, or the client cancels. Clients that time out sooner should send
-  a `progressToken`; Neurouter sends progress every 10 s while a call is held.
+  a `progressToken`; Neurouter Hub sends progress every 10 s while a call is held.
 - **Upstream credentials** (shared bearer, headers, per-user OAuth) are envelope-encrypted
   (AES-256-GCM DEKs wrapped by the KEKs). Outbound requests are SSRF-guarded: cloud metadata
   ranges are always denied, private networks are configurable (`UPSTREAM_ALLOW_PRIVATE_NETWORKS`,

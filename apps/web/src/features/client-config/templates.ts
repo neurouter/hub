@@ -79,7 +79,7 @@ export function buildSnippet(client: ClientId, { config, auth, key, agentName }:
           ? key
             ? json({ servers: { [name]: { type: 'http', url, headers: { Authorization: `Bearer ${key}` } } } })
             : json({
-                inputs: [{ type: 'promptString', id: 'neurouter-key', description: 'Neurouter API key', password: true }],
+                inputs: [{ type: 'promptString', id: 'neurouter-key', description: 'Neurouter Hub API key', password: true }],
                 servers: { [name]: { type: 'http', url, headers: { Authorization: 'Bearer ${input:neurouter-key}' } } },
               })
           : json({ servers: { [name]: { type: 'http', url } } }),

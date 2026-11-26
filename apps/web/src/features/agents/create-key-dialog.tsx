@@ -89,7 +89,7 @@ export function CreateKeyDialog({ agent, open, onOpenChange, onCreated }: { agen
               <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               <div className="flex flex-col gap-0.5">
                 <span className="font-semibold">This is the only time the key is shown.</span>
-                <span className="text-[13px] text-foreground">Store it in your secret manager now. Neurouter keeps only a hash and the prefix.</span>
+                <span className="text-[13px] text-foreground">Store it in your secret manager now. Neurouter Hub keeps only a hash and the prefix.</span>
               </div>
             </div>
             <div className="flex flex-col gap-1.5">

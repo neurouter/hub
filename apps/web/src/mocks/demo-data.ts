@@ -66,7 +66,7 @@ const SERVER_SEEDS: ServerSeed[] = [
   { key: 'github', slug: 'github', name: 'github', description: 'Issues, pull requests and code search across the acme-corp organisation.', url: 'https://api.githubcopilot.com/mcp/', authType: 'per_user_oauth', owner: PEOPLE.marco, health: 'up', latency: 182, tags: ['engineering', 'source-control'], trusted: true },
   { key: 'docs', slug: 'internal-docs', name: 'internal-docs', description: 'Search the engineering handbook, runbooks and RFCs.', url: 'https://docs-mcp.acme.example/mcp', authType: 'shared_bearer', owner: PEOPLE.dana, health: 'up', latency: 96, tags: ['knowledge'], trusted: false },
   { key: 'jira', slug: 'jira', name: 'jira', description: 'Search and create Jira issues in the ACME and OPS projects.', url: 'https://mcp.atlassian.example/v1/mcp', authType: 'per_user_oauth', owner: PEOPLE.dana, health: 'up', latency: 412, tags: ['planning'], trusted: false },
-  { key: 'slack', slug: 'slack', name: 'slack', description: 'Read channels and post messages as the Neurouter bot.', url: 'https://slack-mcp.acme.example/mcp', authType: 'shared_bearer', owner: PEOPLE.dana, health: 'up', latency: 140, tags: ['communication'], trusted: false },
+  { key: 'slack', slug: 'slack', name: 'slack', description: 'Read channels and post messages as the Neurouter Hub bot.', url: 'https://slack-mcp.acme.example/mcp', authType: 'shared_bearer', owner: PEOPLE.dana, health: 'up', latency: 140, tags: ['communication'], trusted: false },
   { key: 'postgres', slug: 'postgres-analytics', name: 'postgres-analytics', description: 'Read-only SQL over the analytics warehouse (orders, revenue, usage marts).', url: 'https://pg-mcp.internal.acme.example/mcp', authType: 'shared_header', owner: PEOPLE.dana, health: 'degraded', latency: 1830, tags: ['data'], trusted: false },
   { key: 'oncall', slug: 'oncall', name: 'oncall', description: 'Page responders and read on-call schedules.', url: 'https://oncall-mcp.acme.example/sse', authType: 'shared_header', owner: PEOPLE.dana, health: 'down', latency: null, tags: ['operations'], trusted: false },
 ];
@@ -419,7 +419,7 @@ export const OAUTH_CLIENTS: OAuthClientRow[] = [
 ];
 
 export const SYSTEM_INFO: SystemInfo = {
-  version: '0.1.1',
+  version: '0.2.0',
   dbDialect: 'postgres',
   searchMode: 'hybrid',
   embeddingModel: 'Xenova/all-MiniLM-L6-v2',

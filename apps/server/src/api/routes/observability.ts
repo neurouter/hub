@@ -61,7 +61,7 @@ export async function observabilityRoutes(app: FastifyInstance, s: Services): Pr
     if (!cfg.webhook.url) throw AppError.validation('No webhook URL configured', [{ path: ['export', 'webhookUrl'], message: 'Set a webhook URL first', code: 'required' }]);
     const sink = s.webhookSink(cfg.webhook.url, cfg.webhook.secretRef);
     const now = s.clock.now();
-    const body = `${JSON.stringify({ type: 'test', id: `test-${now}`, ts: new Date(now).toISOString(), message: 'Neurouter audit webhook test event' })}\n`;
+    const body = `${JSON.stringify({ type: 'test', id: `test-${now}`, ts: new Date(now).toISOString(), message: 'Neurouter Hub audit webhook test event' })}\n`;
     s.audit.admin({ actorUserId: user.id, action: 'settings.export.test', targetType: 'settings', targetId: 'export', ...clientMeta(req) });
     try {
       const r = await sink.post(body);

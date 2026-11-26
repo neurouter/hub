@@ -1,7 +1,7 @@
-# Neurouter Helm values (backend plan §16.3).
+# Neurouter Hub Helm values (backend plan §16.3).
 
 image:
-  repository: ghcr.io/neurouter/neurouter
+  repository: ghcr.io/neurouter/hub
   tag: ""            # defaults to .Chart.AppVersion
   pullPolicy: IfNotPresent
 imagePullSecrets: []
@@ -40,7 +40,8 @@ oidc:
   allowedEmailDomains: ""
   bootstrapAdminEmail: ""
 
-# onStart: every pod migrates under Kysely's DB lock. job: a pre-install/pre-upgrade Job migrates and pods skip it.
+# onStart: every pod migrates under Kysely's DB lock. job: a pre-upgrade Job migrates and pods skip it
+# (the first install always migrates on start, because the Job's ServiceAccount and Secrets don't exist yet).
 migrations:
   mode: job
 

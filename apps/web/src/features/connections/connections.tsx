@@ -148,7 +148,7 @@ export function ConnectionsList({ returned, onConsumed }: { returned: { connecte
         open={!!confirm}
         onOpenChange={(o) => !o && setConfirm(null)}
         title={`Disconnect ${confirm?.server.name ?? ''}?`}
-        description="Agents acting as you lose access to this server's tools until you connect again. Neurouter also asks the upstream service to revoke the token."
+        description="Agents acting as you lose access to this server's tools until you connect again. Neurouter Hub also asks the upstream service to revoke the token."
         confirmLabel="Disconnect"
         pending={disconnect.isPending}
         onConfirm={() => confirm && disconnect.mutate(confirm)}

@@ -100,7 +100,7 @@ describe('per-user upstream OAuth', () => {
 
   it('serves the gateway CIMD document', async () => {
     const doc = (await ctx.app.inject({ method: 'GET', url: '/oauth/client-metadata.json' })).json();
-    expect(doc).toEqual({ client_id: `${GW}/oauth/client-metadata.json`, client_name: 'Neurouter (Acme)', client_uri: GW, redirect_uris: [`${GW}/oauth/upstream/callback`], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' });
+    expect(doc).toEqual({ client_id: `${GW}/oauth/client-metadata.json`, client_name: 'Neurouter Hub (Acme)', client_uri: GW, redirect_uris: [`${GW}/oauth/upstream/callback`], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' });
   });
 
   it('owner connects (sync user), users connect, and calls run with each user\'s own upstream token', async () => {

@@ -27,9 +27,9 @@ describe('consent helpers', () => {
 describe('/auth/consent (W10 acceptance)', () => {
   it('unverified (DCR) client: warning, self-declared id, redirect host verbatim, scopes with descriptions', async () => {
     await renderRoute(url, { fixtures: { 'oauth.getConsent': consentRequest(false) } });
-    expect(await screen.findByRole('heading', { level: 1, name: 'Quillmate Desktop wants to use Neurouter as you' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Quillmate Desktop wants to use Neurouter Hub as you' })).toBeInTheDocument();
     expect(screen.getByText('Unverified app · dynamically registered')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent("Neurouter couldn't verify who made this app");
+    expect(screen.getByRole('alert')).toHaveTextContent("Neurouter Hub couldn't verify who made this app");
     expect(screen.getByText('Quillmate Desktop (self-declared)')).toBeInTheDocument();
     expect(screen.getByText('client_id dcr_01JDBC7Q4M8X2ZK9')).toBeInTheDocument();
     expect(screen.getByText('[::1]:33418')).toBeInTheDocument();

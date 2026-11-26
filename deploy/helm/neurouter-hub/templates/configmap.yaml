@@ -12,7 +12,7 @@ data:
   TRUST_PROXY: "true"
   SERVE_WEB: "true"
   DB_POOL_MAX: {{ .Values.database.poolMax | quote }}
-  MIGRATE_ON_START: {{ eq .Values.migrations.mode "onStart" | quote }}
+  MIGRATE_ON_START: {{ or (eq .Values.migrations.mode "onStart") .Release.IsInstall | quote }}
   COORDINATION_BACKEND: postgres
   EMBEDDINGS_ENABLED: {{ .Values.embeddings.enabled | quote }}
   EMBEDDINGS_MODEL: {{ .Values.embeddings.model | quote }}

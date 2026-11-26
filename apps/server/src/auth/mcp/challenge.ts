@@ -12,7 +12,7 @@ export function protectedResourceMetadata(publicUrl: string, resourceUri: string
     authorization_servers: [publicUrl],
     scopes_supported: [MCP_SCOPE],
     bearer_methods_supported: ['header'],
-    resource_name: 'Neurouter',
+    resource_name: 'Neurouter Hub',
   };
 }
 

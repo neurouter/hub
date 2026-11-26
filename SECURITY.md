@@ -4,7 +4,7 @@ Please report vulnerabilities privately. Do not open a public issue.
 
 ## How to report
 
-- **Preferred:** [GitHub private vulnerability reporting](https://github.com/neurouter/neurouter/security/advisories/new)
+- **Preferred:** [GitHub private vulnerability reporting](https://github.com/neurouter/hub/security/advisories/new)
 - **Email:** signup@neurouter.com (put "SECURITY" in the subject)
 
 Include the affected version or commit, the deployment shape (Docker, Helm, config that matters),
@@ -19,11 +19,11 @@ steps to reproduce, and the impact you observed.
 
 ## Supported versions
 
-Neurouter is pre-1.0. Security fixes go to the latest release only.
+Neurouter Hub is pre-1.0. Security fixes go to the latest release only.
 
 ## Scope and safe harbor
 
 The full policy, including scope and safe-harbor terms, is at
-[neurouter.com/security](https://neurouter.com/security). The gateway's security model
+[neurouter.com/security](https://hub.neurouter.com/security). The gateway's security model
 (authentication, ACL, no token passthrough, envelope encryption, audit chain) is described in the
-[docs](https://neurouter.com/docs).
+[docs](https://hub.neurouter.com/docs).

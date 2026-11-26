@@ -64,7 +64,7 @@ describe('/mcp gateway', () => {
 
   it('serves PRM and challenges unauthenticated requests (401 + WWW-Authenticate)', async () => {
     const prm = (await ctx.app.inject({ method: 'GET', url: '/.well-known/oauth-protected-resource/mcp' })).json();
-    expect(prm).toEqual({ resource: 'http://gw.test/mcp', authorization_servers: ['http://gw.test'], scopes_supported: ['mcp:tools'], bearer_methods_supported: ['header'], resource_name: 'Neurouter' });
+    expect(prm).toEqual({ resource: 'http://gw.test/mcp', authorization_servers: ['http://gw.test'], scopes_supported: ['mcp:tools'], bearer_methods_supported: ['header'], resource_name: 'Neurouter Hub' });
     const none = await ctx.app.inject({ method: 'POST', url: '/mcp', payload: '{}', headers: { 'content-type': 'application/json' } });
     expect(none.statusCode).toBe(401);
     expect(none.headers['www-authenticate']).toBe('Bearer resource_metadata="http://gw.test/.well-known/oauth-protected-resource/mcp", scope="mcp:tools"');

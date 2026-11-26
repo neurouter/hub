@@ -24,7 +24,7 @@ describe('app shell', () => {
     expect(within(crumbs).getByText('Portal')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /search pages and tools/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /theme:/i })).toBeInTheDocument();
-    expect(document.title).toBe('Catalog · Neurouter');
+    expect(document.title).toBe('Catalog · Neurouter Hub');
   });
 
   it('shows role-specific groups and badges for an admin', async () => {

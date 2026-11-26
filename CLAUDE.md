@@ -1,4 +1,4 @@
-# Neurouter — Enterprise MCP Gateway
+# Neurouter Hub — Enterprise MCP Gateway
 
 This is a full rewrite (Phase 1 in progress on `master`). The legacy LLM gateway lives in the private repo `neurouter/neurouter-legacy` (tag `v1.0.0-legacy`).
 

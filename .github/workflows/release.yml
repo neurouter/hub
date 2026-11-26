@@ -1,9 +1,11 @@
 name: Release
 
 # Push a tag like v0.1.0 to publish:
-# - multi-arch image to ghcr.io/neurouter/neurouter (and Docker Hub when DOCKERHUB_* secrets exist)
+# - multi-arch image to ghcr.io/neurouter/hub, the legacy ghcr.io/neurouter/neurouter (0.2.x only)
+#   and docker.io/neurouter/hub (when DOCKERHUB_* secrets exist)
 # - keyless cosign signature, SPDX SBOM and build provenance
-# - Helm chart to oci://ghcr.io/neurouter/charts
+# - Helm chart to oci://ghcr.io/neurouter/charts/neurouter-hub
+# - MCP Registry entry com.neurouter/hub
 on:
   push:
     tags: ['v*.*.*']
@@ -13,7 +15,9 @@ permissions:
   contents: read
 
 env:
-  IMAGE: ghcr.io/neurouter/neurouter
+  IMAGE: ghcr.io/neurouter/hub
+  # Legacy image path, still pushed for 0.2.x so existing installs keep pulling (Phase 6 of the rename drops it).
+  LEGACY_IMAGE: ghcr.io/neurouter/neurouter
 
 jobs:
   image:
@@ -45,7 +49,8 @@ jobs:
         with:
           images: |
             ${{ env.IMAGE }}
-            ${{ env.DOCKERHUB_USERNAME != '' && 'docker.io/neurouter/neurouter' || '' }}
+            ${{ startsWith(github.ref_name, 'v0.2.') && env.LEGACY_IMAGE || '' }}
+            ${{ env.DOCKERHUB_USERNAME != '' && 'docker.io/neurouter/hub' || '' }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -66,8 +71,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - uses: sigstore/cosign-installer@v3
-      - name: Sign image (keyless)
-        run: cosign sign --yes "${IMAGE}@${{ steps.build.outputs.digest }}"
+      - name: Sign images (keyless)
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          LEGACY: ${{ startsWith(github.ref_name, 'v0.2.') && env.LEGACY_IMAGE || '' }}
+          DOCKERHUB: ${{ env.DOCKERHUB_USERNAME != '' && 'docker.io/neurouter/hub' || '' }}
+        run: |
+          for img in "$IMAGE" $LEGACY $DOCKERHUB; do cosign sign --yes "${img}@${DIGEST}"; done
       - uses: anchore/sbom-action@v0
         with:
           image: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
@@ -90,13 +100,14 @@ jobs:
       - uses: azure/setup-helm@v5
       - name: Package and push chart
         run: |
-          helm lint deploy/helm/neurouter
-          helm package deploy/helm/neurouter --destination dist-chart
+          helm lint deploy/helm/neurouter-hub
+          helm package deploy/helm/neurouter-hub --destination dist-chart
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
           helm push dist-chart/*.tgz oci://ghcr.io/neurouter/charts
 
   mcp-registry:
-    # Publishes server.json as com.neurouter/gateway (DNS auth on neurouter.com).
+    # Publishes server.json as com.neurouter/hub (DNS auth on neurouter.com) and keeps the old
+    # com.neurouter/gateway name deprecated.
     # Skipped until the MCP_REGISTRY_PRIVATE_KEY secret (hex Ed25519 seed) exists.
     runs-on: ubuntu-latest
     needs: image
@@ -112,8 +123,10 @@ jobs:
         if: env.MCP_PRIVATE_KEY != ''
         run: |
           version="${GITHUB_REF_NAME#v}"
-          jq --arg v "$version" '.version = $v | .packages[0].identifier = "ghcr.io/neurouter/neurouter:\($v)"' server.json > server.json.tmp
+          jq --arg v "$version" '.version = $v | .packages[0].identifier = "ghcr.io/neurouter/hub:\($v)"' server.json > server.json.tmp
           mv server.json.tmp server.json
           curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/download/${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
           ./mcp-publisher login dns --domain neurouter.com
           ./mcp-publisher publish
+          ./mcp-publisher status --status deprecated --all-versions \
+            --message "Renamed to com.neurouter/hub (Neurouter Hub)" com.neurouter/gateway

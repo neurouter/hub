@@ -162,7 +162,7 @@ describe('identity REST', () => {
   });
 
   it('auth providers + dev login disabled outside development', async () => {
-    expect((await ctx.as(null, { method: 'GET', url: '/api/auth/providers' })).json()).toEqual({ productName: 'Neurouter', providers: [] });
+    expect((await ctx.as(null, { method: 'GET', url: '/api/auth/providers' })).json()).toEqual({ productName: 'Neurouter Hub', providers: [] });
     expect((await ctx.as(null, { method: 'POST', url: '/api/auth/dev-login', payload: { email: 'a@b.test' } })).statusCode).toBe(404);
     const login = await ctx.as(null, { method: 'GET', url: '/api/auth/login' });
     expect(login.headers.location).toBe('/auth/login?error=idp_error');

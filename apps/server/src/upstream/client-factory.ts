@@ -23,7 +23,7 @@ export interface UpstreamServerInfo {
   icons?: unknown[];
 }
 
-export const GATEWAY_CLIENT_INFO = { name: 'neurouter-gateway', version: '0.1.1' } as const;
+export const GATEWAY_CLIENT_INFO = { name: 'neurouter-gateway', version: '0.2.0' } as const;
 
 /**
  * Builds an SDK v2 client for an upstream (backend §5.7): Streamable HTTP with `server/discover`

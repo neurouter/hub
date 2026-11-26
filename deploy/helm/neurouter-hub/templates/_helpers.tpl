@@ -1,6 +1,9 @@
-{{- define "neurouter.name" -}}{{ .Chart.Name }}{{- end -}}
+{{/* Fixed base "neurouter", not .Chart.Name: the chart was renamed to neurouter-hub and resource
+names and selector labels must not change on upgrade. */}}
+{{- define "neurouter.name" -}}{{ .Values.nameOverride | default "neurouter" | trunc 63 | trimSuffix "-" }}{{- end -}}
 {{- define "neurouter.fullname" -}}
-{{- if contains .Chart.Name .Release.Name -}}{{ .Release.Name | trunc 63 | trimSuffix "-" }}{{- else -}}{{ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}{{- end -}}
+{{- if .Values.fullnameOverride -}}{{ .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else -}}{{- $n := include "neurouter.name" . -}}{{- if contains $n .Release.Name -}}{{ .Release.Name | trunc 63 | trimSuffix "-" }}{{- else -}}{{ printf "%s-%s" .Release.Name $n | trunc 63 | trimSuffix "-" }}{{- end -}}{{- end -}}
 {{- end -}}
 {{- define "neurouter.labels" -}}
 app.kubernetes.io/name: {{ include "neurouter.name" . }}

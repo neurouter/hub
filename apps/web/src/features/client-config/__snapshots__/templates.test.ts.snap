@@ -86,7 +86,7 @@ exports[`client config templates > VS Code × api_key 1`] = `
     {
       "type": "promptString",
       "id": "neurouter-key",
-      "description": "Neurouter API key",
+      "description": "Neurouter Hub API key",
       "password": true
     }
   ],

@@ -1,0 +1,35 @@
+apiVersion: v2
+name: neurouter-hub
+description: Neurouter Hub, the self-hosted, open-source MCP gateway with SSO, per-tool access control, human approvals and a tamper-evident audit log
+type: application
+version: 0.2.0
+appVersion: "0.2.0"
+license: Apache-2.0
+keywords: [mcp, mcp-gateway, model-context-protocol, ai-gateway, oauth, oidc, audit-log, access-control, ai-agents, security]
+home: https://hub.neurouter.com
+icon: https://hub.neurouter.com/icon-512.png
+sources:
+  - https://github.com/neurouter/hub
+maintainers:
+  - name: Neurouter Hub maintainers
+    email: signup@neurouter.com
+    url: https://github.com/neurouter
+annotations:
+  artifacthub.io/category: security
+  artifacthub.io/alternativeName: neurouter
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Documentation
+      url: https://hub.neurouter.com/docs
+    - name: Support
+      url: https://github.com/neurouter/hub/discussions
+  artifacthub.io/images: |
+    - name: neurouter-hub
+      image: ghcr.io/neurouter/hub:0.2.0
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Renamed from the neurouter chart to neurouter-hub. Resource names, Secrets and selector labels are unchanged, so helm upgrade works in place.
+    - kind: changed
+      description: Image moved to ghcr.io/neurouter/hub (also docker.io/neurouter/hub).
+    - kind: fixed
+      description: A fresh install with migrations.mode=job no longer hangs; the first install migrates on pod start and the Job runs on upgrades.

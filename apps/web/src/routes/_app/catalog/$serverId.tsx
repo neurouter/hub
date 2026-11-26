@@ -145,7 +145,7 @@ function CatalogServerPage() {
         <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-info/30 bg-info-muted p-4">
           <div className="flex min-w-72 flex-1 flex-col gap-0.5">
             <span className="font-medium text-info">Connect your {s.name} account to use these tools</span>
-            <span className="text-[13.5px]">This server acts as you. Neurouter stores an encrypted token for your account and never passes it to agents. Calls fail with “account not connected” until you connect.</span>
+            <span className="text-[13.5px]">This server acts as you. Neurouter Hub stores an encrypted token for your account and never passes it to agents. Calls fail with “account not connected” until you connect.</span>
           </div>
           <Button size="sm" onClick={connect}>
             Connect account

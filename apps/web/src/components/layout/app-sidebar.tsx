@@ -52,7 +52,7 @@ export function AppSidebar({ me }: { me: Me }) {
               </svg>
             </div>
             <div className="flex min-w-0 flex-1 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-semibold">Neurouter</span>
+              <span className="text-sm font-semibold">Neurouter Hub</span>
               <span className="truncate text-xs text-muted-foreground">{me.org.name}</span>
             </div>
             <span className="rounded-full bg-muted px-1.5 text-[11.5px] font-medium text-muted-foreground tabular-nums group-data-[collapsible=icon]:hidden">

@@ -1,4 +1,4 @@
-# Contributing to Neurouter
+# Contributing to Neurouter Hub
 
 Thanks for helping. Bug reports, docs fixes and pull requests are all welcome.
 

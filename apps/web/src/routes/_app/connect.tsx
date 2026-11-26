@@ -87,7 +87,7 @@ function ConnectPage() {
   const agentItems = (agents.data?.items ?? []).map((a) => ({ value: a.id, label: a.name }));
   return (
     <div className="flex w-full max-w-screen-2xl flex-col gap-5">
-      <PageHeader title="Connect a client" description="Point any MCP client at one Neurouter endpoint. You'll only see the tools you're allowed to use." />
+      <PageHeader title="Connect a client" description="Point any MCP client at one Neurouter Hub endpoint. You'll only see the tools you're allowed to use." />
       {cfg.error ? <ErrorState error={cfg.error} onRetry={() => void cfg.refetch()} /> : null}
       <div className="flex flex-col items-start gap-6 lg:flex-row">
         <div className="flex w-full min-w-0 flex-1 flex-col gap-7">
@@ -135,7 +135,7 @@ function ConnectPage() {
               </div>
             ) : null}
           </Step>
-          <Step n={3} title="Add Neurouter to your client">
+          <Step n={3} title="Add Neurouter Hub to your client">
             <Tabs value={client} onValueChange={(v) => set({ client: v as ClientId })}>
               <TabsList aria-label="Client">
                 {CLIENTS.map((c) => (

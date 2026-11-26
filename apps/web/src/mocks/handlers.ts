@@ -31,7 +31,7 @@ export function createContractHandlers(fixtures: ContractFixtures = {}, opts: { 
   return ALL_ENDPOINTS.map(({ key, def }: { key: string; def: EndpointDef }) =>
     METHOD[def.method](def.path, async ({ request, params }) => {
       if (opts.readOnly && def.method !== 'GET' && !DEMO_READ_ONLY_ALLOW.has(key)) {
-        return problem(403, 'demo_read_only', 'Read-only demo', "This is a read-only demo, so changes aren't saved. Run Neurouter yourself to try it.");
+        return problem(403, 'demo_read_only', 'Read-only demo', "This is a read-only demo, so changes aren't saved. Run Neurouter Hub yourself to try it.");
       }
       if (!(key in fixtures)) return problem(501, 'not_implemented', 'Not mocked', `No MSW fixture for ${key} (${def.method} ${def.path})`);
       const f = fixtures[key];

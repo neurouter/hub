@@ -37,7 +37,7 @@ export function buildServerFactory(d: Pick<McpRouteDeps, 'version' | 'pipeline'>
     const rc = (ctx.authInfo?.extra as Record<string, unknown> | undefined)?.[RC_KEY] as RequestContext | undefined;
     if (!rc) throw new Error('unauthenticated MCP request reached the server factory');
     const server = new Server(
-      { name: 'neurouter', version: d.version },
+      { name: 'neurouter', title: 'Neurouter Hub', version: d.version },
       {
         capabilities: { tools: { listChanged: true } },
         instructions: INSTRUCTIONS,

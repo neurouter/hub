@@ -55,7 +55,7 @@ const stateAad = (hashHex: string) => `neurouter:upstream-oauth-state:${hashHex}
 export function gatewayClientMetadata(publicUrl: string, orgName: string) {
   return {
     client_id: `${publicUrl}/oauth/client-metadata.json`,
-    client_name: `Neurouter (${orgName})`,
+    client_name: `Neurouter Hub (${orgName})`,
     client_uri: publicUrl,
     redirect_uris: [`${publicUrl}/oauth/upstream/callback`],
     grant_types: ['authorization_code', 'refresh_token'],

@@ -35,7 +35,7 @@ export function badgesFixture(patch: Partial<Badges> = {}): Badges {
 }
 
 export function providersFixture(patch: Partial<AuthProviders> = {}): AuthProviders {
-  return AuthProviders.parse({ productName: 'Neurouter', providers: [{ id: 'oidc', displayName: 'Okta' }], ...patch });
+  return AuthProviders.parse({ productName: 'Neurouter Hub', providers: [{ id: 'oidc', displayName: 'Okta' }], ...patch });
 }
 
 export function clientConfigFixture(): ClientConfig {

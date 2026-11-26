@@ -14,10 +14,10 @@ export function DemoBanner() {
       </span>
       <span className="text-muted-foreground">Simulated company, agents and traffic. Changes aren't saved.</span>
       <span className="inline-flex gap-3">
-        <a className="font-medium underline-offset-4 hover:underline" href="https://neurouter.com/docs/quickstart">
+        <a className="font-medium underline-offset-4 hover:underline" href="https://hub.neurouter.com/docs/quickstart">
           Run it yourself
         </a>
-        <a className="font-medium underline-offset-4 hover:underline" href="https://github.com/neurouter/neurouter">
+        <a className="font-medium underline-offset-4 hover:underline" href="https://github.com/neurouter/hub">
           GitHub
         </a>
       </span>

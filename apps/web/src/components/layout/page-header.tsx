@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 export function PageHeader({ title, description, actions, leading }: { title: string; description?: ReactNode; actions?: ReactNode; leading?: ReactNode }) {
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    document.title = `${title} · Neurouter`;
+    document.title = `${title} · Neurouter Hub`;
     ref.current?.focus({ preventScroll: true });
   }, [title]);
   return (

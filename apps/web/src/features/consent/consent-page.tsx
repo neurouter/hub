@@ -46,7 +46,7 @@ function Shell({ org, children }: { org?: string | undefined; children: ReactNod
             <path d="M5 19V5l14 14V5" />
           </svg>
         </div>
-        <span className="text-base font-semibold">Neurouter</span>
+        <span className="text-base font-semibold">Neurouter Hub</span>
         {org ? <span className="text-muted-foreground">· {org}</span> : null}
       </div>
       <main className="flex w-full max-w-[520px] flex-col gap-[18px] rounded-[14px] border bg-card p-5 shadow-xs sm:p-7">{children}</main>
@@ -154,7 +154,7 @@ export function ConsentPage({ requestId }: { requestId: string | undefined }) {
         </div>
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-[19px] font-semibold tracking-tight break-words">
-            {c.client.name} wants to use Neurouter as you
+            {c.client.name} wants to use Neurouter Hub as you
           </h1>
           <div className="flex flex-wrap items-center gap-1.5">
             <RegistrationBadge client={c.client} />
@@ -166,7 +166,7 @@ export function ConsentPage({ requestId }: { requestId: string | undefined }) {
         <div role="alert" className="flex gap-2.5 rounded-[10px] border border-warning/30 bg-warning-muted px-3.5 py-3 text-[13.5px]">
           <TriangleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
           <div className="flex flex-col gap-0.5">
-            <span className="font-semibold text-warning">Neurouter couldn't verify who made this app</span>
+            <span className="font-semibold text-warning">Neurouter Hub couldn't verify who made this app</span>
             <span>The name and details below were supplied by the app itself. Only approve if you started this connection and recognise the redirect address.</span>
           </div>
         </div>

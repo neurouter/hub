@@ -5,7 +5,9 @@ metadata:
   name: {{ include "neurouter.fullname" . }}-migrate-{{ .Release.Revision }}
   labels: {{- include "neurouter.labels" . | nindent 4 }}
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
+    # pre-upgrade only: on first install the ServiceAccount and Secrets this Job uses don't exist yet
+    # while pre-install hooks run, so pods migrate on start instead (see configmap.yaml).
+    helm.sh/hook: pre-upgrade
     helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:

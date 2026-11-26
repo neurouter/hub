@@ -6,7 +6,7 @@ test.describe('sign-in and sign-out', () => {
   test('an unauthenticated deep link goes to login, then back to the page after signing in', async ({ page }) => {
     await page.goto('/agents');
     await expect(page).toHaveURL(/\/auth\/login\?returnTo=%2Fagents$/);
-    await expect(page.getByText('Sign in to Neurouter')).toBeVisible();
+    await expect(page.getByText('Sign in to Neurouter Hub')).toBeVisible();
     await page.getByLabel('Development login').fill(`user-${uid()}@e2e.test`);
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page).toHaveURL(/\/agents$/);

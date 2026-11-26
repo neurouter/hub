@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and ideas
-    url: https://github.com/neurouter/neurouter/discussions
+    url: https://github.com/neurouter/hub/discussions
     about: Ask and discuss in GitHub Discussions.
   - name: Report a vulnerability
-    url: https://github.com/neurouter/neurouter/security/advisories/new
+    url: https://github.com/neurouter/hub/security/advisories/new
     about: Report security issues privately.
   - name: Documentation
-    url: https://neurouter.com/docs
+    url: https://hub.neurouter.com/docs
     about: Guides and configuration reference.
